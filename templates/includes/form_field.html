@@ -1,0 +1,10 @@
+{# Draws one form field: label, input, help text and errors. #}
+{# Usage: {% include 'includes/form_field.html' with field=form.email %} #}
+<div class="form-group{% if field.errors %} has-error{% endif %}">
+  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {{ field }}
+  {% if field.help_text %}
+    <div class="helptext" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>
+  {% endif %}
+  {{ field.errors }}
+</div>
