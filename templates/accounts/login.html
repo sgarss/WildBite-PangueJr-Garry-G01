@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<section class="card form-card">
+  <h1>Log in</h1>
+  <p class="muted">Welcome back to WildBite.</p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    {% include 'includes/form_field.html' with field=form.username %}
+    {% include 'includes/form_field.html' with field=form.password %}
+
+    {# Remembers where the user was going (e.g. ?next=/accounts/profile/) #}
+    <input type="hidden" name="next" value="{{ next }}">
+
+    <button type="submit" class="btn btn-primary btn-block">Log in</button>
+  </form>
+
+  <p class="form-footer">No account yet? <a href="{% url 'accounts:register' %}">Register</a></p>
+</section>
+{% endblock %}

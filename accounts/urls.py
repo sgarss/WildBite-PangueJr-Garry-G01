@@ -8,11 +8,11 @@ app_name = 'accounts'
 
 urlpatterns = [
     path('accounts/register/', views.register, name='register'),
+    path('accounts/login/', views.WildBiteLoginView.as_view(), name='login'),
+    path('accounts/logout/', views.WildBiteLogoutView.as_view(), name='logout'),
 
     # TEMPORARY: these names exist so the navbar links work.
     # Each one is replaced with the real view in its own phase.
-    path('accounts/login/', coming_soon, {'title': 'Login'}, name='login'),                   # Phase 5
-    path('accounts/logout/', coming_soon, {'title': 'Logout'}, name='logout'),                # Phase 5
     path('dashboard/', coming_soon, {'title': 'Dashboard'}, name='dashboard'),                # Phase 6
     path('accounts/profile/', coming_soon, {'title': 'Profile'}, name='profile'),             # Phase 7
 ]

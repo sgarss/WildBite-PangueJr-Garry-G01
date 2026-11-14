@@ -1,5 +1,11 @@
 from django import forms
-from django.contrib.auth.forms import AdminUserCreationForm, UserChangeForm, UserCreationForm
+from django.contrib.auth.forms import (
+    AdminUserCreationForm,
+    AuthenticationForm,
+    UserChangeForm,
+    UserCreationForm,
+    UsernameField,
+)
 
 from .models import User
 
@@ -50,6 +56,26 @@ class RegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+
+class EmailLoginForm(AuthenticationForm):
+    """Django's login form, with the "username" box labelled Email.
+
+    Django's form still calls the field "username" internally, because
+    USERNAME_FIELD = 'email' on our User model tells it what to look up.
+    """
+
+    username = UsernameField(
+        label="Email",
+        widget=forms.EmailInput(attrs={"autofocus": True, "placeholder": "you@cit.edu"}),
+    )
+
+    # One generic message for every failure (wrong email, wrong password,
+    # inactive account) so attackers can't learn which emails are registered.
+    error_messages = {
+        "invalid_login": "Invalid email or password.",
+        "inactive": "Invalid email or password.",
+    }
 
 
 # ---------------------------------------------------------------------------
