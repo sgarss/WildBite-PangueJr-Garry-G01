@@ -1,0 +1,70 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Home{% endblock %} | WildBite</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a class="brand" href="{% url 'home' %}">Wild<span>Bite</span></a>
+
+      <button class="nav-toggle" type="button" aria-label="Open menu"
+              aria-expanded="false" aria-controls="nav-links">&#9776;</button>
+
+      <nav id="nav-links" class="nav-links">
+        {% if user.is_authenticated %}
+          <a href="{% url 'accounts:dashboard' %}">Dashboard</a>
+
+          {% if user.is_canteen_staff %}
+            {# STAFF navigation (placeholders for now) #}
+            <a href="{% url 'coming_soon' 'orders' %}">Orders</a>
+            <a href="{% url 'coming_soon' 'menu-items' %}">Menu Items</a>
+            <a href="{% url 'coming_soon' 'categories' %}">Categories</a>
+            <a href="{% url 'coming_soon' 'payments' %}">Payments</a>
+            <a href="{% url 'coming_soon' 'reports' %}">Reports</a>
+          {% else %}
+            {# STUDENT navigation (placeholders for now) #}
+            <a href="{% url 'coming_soon' 'menu' %}">Menu</a>
+            <a href="{% url 'coming_soon' 'my-orders' %}">My Orders</a>
+          {% endif %}
+
+          <a href="{% url 'accounts:profile' %}">Profile</a>
+
+          {# Django 5 only allows logout through POST, so this is a tiny form #}
+          <form method="post" action="{% url 'accounts:logout' %}" class="logout-form">
+            {% csrf_token %}
+            <button type="submit" class="nav-button">Logout</button>
+          </form>
+        {% else %}
+          <a href="{% url 'accounts:login' %}">Login</a>
+          <a href="{% url 'accounts:register' %}" class="nav-cta">Register</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page">
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.level_tag }}" role="alert">
+            <span>{{ message }}</span>
+            <button type="button" class="alert-close" aria-label="Dismiss">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="container">WildBite &middot; CIT-U Canteen Pre-Ordering</div>
+  </footer>
+
+  <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>
