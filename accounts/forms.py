@@ -78,6 +78,39 @@ class EmailLoginForm(AuthenticationForm):
     }
 
 
+class ProfileForm(forms.ModelForm):
+    """Lets a user edit ONLY their full name and email.
+
+    role, is_staff, is_superuser, password, etc. are not in `fields`,
+    so Django ignores them even if someone adds them to the POST data.
+    """
+
+    class Meta:
+        model = User
+        fields = ("full_name", "email")
+        labels = {"full_name": "Full name", "email": "Email"}
+        widgets = {
+            "full_name": forms.TextInput(attrs={"autocomplete": "name"}),
+            "email": forms.EmailInput(attrs={"autocomplete": "email"}),
+        }
+
+    def clean_full_name(self):
+        full_name = (self.cleaned_data.get("full_name") or "").strip()
+        if not full_name:
+            raise forms.ValidationError("Please enter your full name.")
+        return full_name
+
+    def clean_email(self):
+        email = User.objects.normalize_email(self.cleaned_data.get("email"))
+        # Same email as another account (any letter case)? Not allowed.
+        # .exclude(pk=...) skips the user's own record, so keeping your
+        # current email is fine.
+        taken = User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists()
+        if taken:
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
+
+
 # ---------------------------------------------------------------------------
 # Admin-only forms (used by Django admin at /admin/)
 # Django's built-in admin forms expect a "username" field, so we point them

@@ -1,7 +1,5 @@
 from django.urls import path
 
-from wildbite.views import coming_soon
-
 from . import views
 
 app_name = 'accounts'
@@ -15,6 +13,8 @@ urlpatterns = [
     path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
     path('staff/dashboard/', views.staff_dashboard, name='staff_dashboard'),
 
-    # TEMPORARY: this name exists so the navbar link works (replaced in Phase 7).
-    path('accounts/profile/', coming_soon, {'title': 'Profile'}, name='profile'),
+    path('accounts/profile/', views.profile, name='profile'),
+    path('accounts/profile/edit/', views.profile_edit, name='profile_edit'),
+    path('accounts/password/change/', views.WildBitePasswordChangeView.as_view(), name='password_change'),
+    path('accounts/password/change/done/', views.WildBitePasswordChangeDoneView.as_view(), name='password_change_done'),
 ]

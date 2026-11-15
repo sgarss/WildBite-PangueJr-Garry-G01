@@ -265,6 +265,20 @@ a { color: var(--maroon); }
   color: var(--maroon-dark);
 }
 
+/* ---------- Profile ---------- */
+.profile-list { margin: 0 0 20px; }
+.profile-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.profile-list dt { font-weight: 600; color: var(--muted); }
+.profile-list dd { margin: 0; text-align: right; word-break: break-word; }
+
+.form-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
 /* ---------- Footer ---------- */
 .footer {
   border-top: 1px solid var(--border);

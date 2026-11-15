@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<section class="card form-card">
+  <h1>My profile</h1>
+
+  <dl class="profile-list">
+    <div>
+      <dt>Full name</dt>
+      <dd>{{ profile_user.full_name }}</dd>
+    </div>
+    <div>
+      <dt>Email</dt>
+      <dd>{{ profile_user.email }}</dd>
+    </div>
+    <div>
+      <dt>Role</dt>
+      <dd><span class="badge">{{ profile_user.get_role_display }}</span></dd>
+    </div>
+    <div>
+      <dt>Date joined</dt>
+      <dd>{{ profile_user.created_at|date:"F j, Y, g:i A" }}</dd>
+    </div>
+  </dl>
+
+  <div class="form-actions">
+    <a class="btn btn-primary" href="{% url 'accounts:profile_edit' %}">Edit profile</a>
+    <a class="btn btn-outline" href="{% url 'accounts:password_change' %}">Change password</a>
+  </div>
+</section>
+{% endblock %}

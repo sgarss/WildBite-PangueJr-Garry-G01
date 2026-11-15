@@ -1,11 +1,17 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import (
+    LoginView,
+    LogoutView,
+    PasswordChangeDoneView,
+    PasswordChangeView,
+)
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
 
 from .decorators import role_required
-from .forms import EmailLoginForm, RegistrationForm
+from .forms import EmailLoginForm, ProfileForm, RegistrationForm
 from .models import User
 
 
@@ -76,3 +82,47 @@ def student_dashboard(request):
 @role_required(User.Role.STAFF)
 def staff_dashboard(request):
     return render(request, 'accounts/staff_dashboard.html')
+
+
+# ---------------------------------------------------------------------------
+# Profile
+# These views ALWAYS use request.user (the logged-in person). There is no
+# user ID in the URL, so nobody can open or edit someone else's profile.
+# ---------------------------------------------------------------------------
+
+@login_required
+def profile(request):
+    """/accounts/profile/ - shows the logged-in user's own details."""
+    return render(request, 'accounts/profile.html', {'profile_user': request.user})
+
+
+@login_required
+def profile_edit(request):
+    """/accounts/profile/edit/ - edit own full name and email only."""
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('accounts:profile')
+        messages.error(request, 'Please fix the errors below.')
+    else:
+        form = ProfileForm(instance=request.user)
+
+    return render(request, 'accounts/profile_edit.html', {'form': form})
+
+
+class WildBitePasswordChangeView(PasswordChangeView):
+    """/accounts/password/change/ (login required by Django).
+
+    Django's PasswordChangeView asks for the old password, checks the new one
+    against AUTH_PASSWORD_VALIDATORS, hashes it, and updates the session so
+    the user STAYS logged in after the change.
+    """
+
+    template_name = 'accounts/password_change.html'
+    success_url = reverse_lazy('accounts:password_change_done')
+
+
+class WildBitePasswordChangeDoneView(PasswordChangeDoneView):
+    template_name = 'accounts/password_change_done.html'
