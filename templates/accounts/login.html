@@ -14,7 +14,7 @@
     {% include 'includes/form_field.html' with field=form.username %}
     {% include 'includes/form_field.html' with field=form.password %}
 
-    {# Remembers where the user was going (e.g. ?next=/accounts/profile/) #}
+    {# Page to return to after login #}
     <input type="hidden" name="next" value="{{ next }}">
 
     <button type="submit" class="btn btn-primary btn-block">Log in</button>

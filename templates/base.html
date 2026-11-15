@@ -19,21 +19,21 @@
           <a href="{% url 'accounts:dashboard' %}">Dashboard</a>
 
           {% if user.is_canteen_staff %}
-            {# STAFF navigation (placeholders for now) #}
+            {# Staff links #}
             <a href="{% url 'coming_soon' 'orders' %}">Orders</a>
             <a href="{% url 'coming_soon' 'menu-items' %}">Menu Items</a>
             <a href="{% url 'coming_soon' 'categories' %}">Categories</a>
             <a href="{% url 'coming_soon' 'payments' %}">Payments</a>
             <a href="{% url 'coming_soon' 'reports' %}">Reports</a>
           {% else %}
-            {# STUDENT navigation (placeholders for now) #}
+            {# Student links #}
             <a href="{% url 'coming_soon' 'menu' %}">Menu</a>
             <a href="{% url 'coming_soon' 'my-orders' %}">My Orders</a>
           {% endif %}
 
           <a href="{% url 'accounts:profile' %}">Profile</a>
 
-          {# Django 5 only allows logout through POST, so this is a tiny form #}
+          {# Logout must be POST #}
           <form method="post" action="{% url 'accounts:logout' %}" class="logout-form">
             {% csrf_token %}
             <button type="submit" class="nav-button">Logout</button>
@@ -47,6 +47,7 @@
   </header>
 
   <main class="container page">
+    {# Success / error messages #}
     {% if messages %}
       <div class="messages">
         {% for message in messages %}

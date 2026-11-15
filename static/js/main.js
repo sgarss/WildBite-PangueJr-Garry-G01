@@ -1,7 +1,5 @@
-// WildBite - small vanilla JavaScript helpers
-
 document.addEventListener('DOMContentLoaded', function () {
-  // 1. Mobile menu: the ☰ button shows/hides the nav links
+  // Mobile menu toggle
   var toggle = document.querySelector('.nav-toggle');
   var links = document.getElementById('nav-links');
   if (toggle && links) {
@@ -11,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 2. Alerts: the × button removes the message
+  // Close alerts
   document.querySelectorAll('.alert-close').forEach(function (button) {
     button.addEventListener('click', function () {
       button.closest('.alert').remove();

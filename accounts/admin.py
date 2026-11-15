@@ -5,6 +5,7 @@ from .forms import AdminUserAddForm, AdminUserEditForm
 from .models import User
 
 
+# User management in Django admin
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     form = AdminUserEditForm
@@ -16,7 +17,7 @@ class UserAdmin(BaseUserAdmin):
     ordering = ("email",)
     readonly_fields = ("created_at", "last_login")
 
-    # Edit page
+    # Edit user page
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal info", {"fields": ("full_name", "role")}),
@@ -24,7 +25,7 @@ class UserAdmin(BaseUserAdmin):
         ("Important dates", {"fields": ("last_login", "created_at")}),
     )
 
-    # "Add user" page (this is how staff create other STAFF accounts)
+    # Add user page (staff accounts are created here)
     add_fieldsets = (
         (None, {
             "classes": ("wide",),

@@ -1,9 +1,3 @@
-"""Tests for the WildBite Account Feature.
-
-Run with:  python manage.py test accounts
-Django creates a temporary test database, runs every test inside it,
-then deletes it. The real data in the `users` table is never touched.
-"""
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.test import TestCase
@@ -14,6 +8,7 @@ User = get_user_model()
 PASSWORD = "Wildbite#2026x"
 
 
+# Test helpers
 def make_student(email="student@cit.edu", full_name="Stu Dent"):
     return User.objects.create_user(email=email, password=PASSWORD, full_name=full_name)
 
@@ -23,10 +18,6 @@ def make_staff(email="staff@cit.edu", full_name="Canteen Staff"):
         email=email, password=PASSWORD, full_name=full_name, role=User.Role.STAFF
     )
 
-
-# ---------------------------------------------------------------------------
-# Model and manager
-# ---------------------------------------------------------------------------
 
 class UserModelTests(TestCase):
     def test_create_user_defaults_to_student_and_hashes_password(self):
@@ -46,21 +37,17 @@ class UserModelTests(TestCase):
         self.assertTrue(admin.is_superuser)
 
     def test_database_check_constraint_rejects_unknown_role(self):
-        """BR-02: the database itself only allows STUDENT or STAFF."""
         user = make_student()
+        # DB should reject an unknown role
         with self.assertRaises(IntegrityError), transaction.atomic():
             User.objects.filter(pk=user.pk).update(role="ADMIN")
 
     def test_database_rejects_duplicate_email(self):
-        """BR-01: UNIQUE email at the database level."""
         make_student(email="dup@cit.edu")
+        # DB should reject a duplicate email
         with self.assertRaises(IntegrityError), transaction.atomic():
             User.objects.create_user(email="dup@cit.edu", password=PASSWORD, full_name="B")
 
-
-# ---------------------------------------------------------------------------
-# Registration
-# ---------------------------------------------------------------------------
 
 class RegistrationTests(TestCase):
     url = reverse("accounts:register")
@@ -81,7 +68,7 @@ class RegistrationTests(TestCase):
         self.assertRedirects(response, reverse("accounts:login"))
         self.assertContains(response, "Account created successfully. Please log in.")
 
-        user = User.objects.get(email="juan@cit.edu")  # stored in lowercase
+        user = User.objects.get(email="juan@cit.edu")
         self.assertEqual(user.full_name, "Juan Dela Cruz")
         self.assertEqual(user.role, User.Role.STUDENT)
         self.assertNotEqual(user.password, PASSWORD)
@@ -133,10 +120,6 @@ class RegistrationTests(TestCase):
         self.assertRedirects(response, reverse("accounts:dashboard"), fetch_redirect_response=False)
 
 
-# ---------------------------------------------------------------------------
-# Login and logout
-# ---------------------------------------------------------------------------
-
 class LoginLogoutTests(TestCase):
     login_url = reverse("accounts:login")
     logout_url = reverse("accounts:logout")
@@ -171,6 +154,7 @@ class LoginLogoutTests(TestCase):
         )
         self.assertRedirects(response, "/accounts/profile/", fetch_redirect_response=False)
 
+        # External next URL is ignored
         self.client.logout()
         response = self.client.post(
             self.login_url,
@@ -191,7 +175,7 @@ class LoginLogoutTests(TestCase):
         self.assertContains(response, "You have been logged out.")
         self.assertNotIn("_auth_user_id", self.client.session)
 
-        # Protected page now sends us back to login
+        # Protected page needs login again
         response = self.client.get(reverse("accounts:profile"))
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response["Location"].startswith(self.login_url))
@@ -202,10 +186,6 @@ class LoginLogoutTests(TestCase):
         self.assertEqual(response.status_code, 405)
         self.assertIn("_auth_user_id", self.client.session)
 
-
-# ---------------------------------------------------------------------------
-# Dashboards and access control (BR-18)
-# ---------------------------------------------------------------------------
 
 class AccessControlTests(TestCase):
     def setUp(self):
@@ -264,10 +244,6 @@ class AccessControlTests(TestCase):
         self.assertTemplateUsed(response, "403.html")
 
 
-# ---------------------------------------------------------------------------
-# Profile
-# ---------------------------------------------------------------------------
-
 class ProfileTests(TestCase):
     def setUp(self):
         self.alice = make_student(email="alice@cit.edu", full_name="Alice")
@@ -294,8 +270,9 @@ class ProfileTests(TestCase):
         self.bob.refresh_from_db()
         self.assertEqual(self.alice.full_name, "Alice Updated")
         self.assertEqual(self.alice.email, "alice.new@cit.edu")
-        self.assertEqual(self.bob.full_name, "Bob")          # untouched
-        self.assertEqual(self.bob.email, "bob@cit.edu")      # untouched
+        # Other user unchanged
+        self.assertEqual(self.bob.full_name, "Bob")
+        self.assertEqual(self.bob.email, "bob@cit.edu")
 
     def test_profile_edit_cannot_change_role_or_permissions(self):
         self.client.post(
@@ -333,7 +310,7 @@ class ProfileTests(TestCase):
         self.alice.refresh_from_db()
         self.assertTrue(self.alice.check_password(new_password))
 
-        # Still logged in: a protected page loads instead of redirecting to login
+        # Still logged in
         response = self.client.get(reverse("accounts:profile"))
         self.assertEqual(response.status_code, 200)
 
