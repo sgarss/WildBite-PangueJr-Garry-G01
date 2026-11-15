@@ -10,22 +10,8 @@ from django.contrib.auth.forms import (
 from .models import User
 
 
-# ---------------------------------------------------------------------------
-# Public forms (used by WildBite pages)
-# ---------------------------------------------------------------------------
-
+# Student sign-up form (no role field)
 class RegistrationForm(UserCreationForm):
-    """Public sign-up form. ALWAYS creates a STUDENT account.
-
-    There is deliberately no "role" field here, so nobody can sign
-    themselves up as canteen staff. Staff accounts are created by a staff
-    admin in Django admin (or with `createsuperuser`).
-
-    password1/password2 come from UserCreationForm, which:
-      - checks that both passwords match, and
-      - runs every validator in settings.AUTH_PASSWORD_VALIDATORS.
-    """
-
     class Meta:
         model = User
         fields = ("full_name", "email")
@@ -41,16 +27,17 @@ class RegistrationForm(UserCreationForm):
             raise forms.ValidationError("Please enter your full name.")
         return full_name
 
+    # Check unique email (any letter case)
     def clean_email(self):
         email = User.objects.normalize_email(self.cleaned_data.get("email"))
-        # iexact = case-insensitive, so "Juan@CIT.edu" matches "juan@cit.edu" (BR-01)
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError("An account with this email already exists.")
         return email
 
     def save(self, commit=True):
-        user = super().save(commit=False)  # also hashes the password
-        user.role = User.Role.STUDENT      # never trust the browser for the role
+        user = super().save(commit=False)
+        # Always register as student
+        user.role = User.Role.STUDENT
         user.is_staff = False
         user.is_superuser = False
         if commit:
@@ -58,20 +45,14 @@ class RegistrationForm(UserCreationForm):
         return user
 
 
+# Login form with email
 class EmailLoginForm(AuthenticationForm):
-    """Django's login form, with the "username" box labelled Email.
-
-    Django's form still calls the field "username" internally, because
-    USERNAME_FIELD = 'email' on our User model tells it what to look up.
-    """
-
     username = UsernameField(
         label="Email",
         widget=forms.EmailInput(attrs={"autofocus": True, "placeholder": "you@cit.edu"}),
     )
 
-    # One generic message for every failure (wrong email, wrong password,
-    # inactive account) so attackers can't learn which emails are registered.
+    # Same message for any failed login
     error_messages = {
         "invalid_login": "Invalid email or password.",
         "inactive": "Invalid email or password.",
@@ -79,14 +60,9 @@ class EmailLoginForm(AuthenticationForm):
 
 
 class ProfileForm(forms.ModelForm):
-    """Lets a user edit ONLY their full name and email.
-
-    role, is_staff, is_superuser, password, etc. are not in `fields`,
-    so Django ignores them even if someone adds them to the POST data.
-    """
-
     class Meta:
         model = User
+        # Only name and email are editable
         fields = ("full_name", "email")
         labels = {"full_name": "Full name", "email": "Email"}
         widgets = {
@@ -102,21 +78,14 @@ class ProfileForm(forms.ModelForm):
 
     def clean_email(self):
         email = User.objects.normalize_email(self.cleaned_data.get("email"))
-        # Same email as another account (any letter case)? Not allowed.
-        # .exclude(pk=...) skips the user's own record, so keeping your
-        # current email is fine.
+        # Unique email, skipping the user's own record
         taken = User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists()
         if taken:
             raise forms.ValidationError("An account with this email already exists.")
         return email
 
 
-# ---------------------------------------------------------------------------
-# Admin-only forms (used by Django admin at /admin/)
-# Django's built-in admin forms expect a "username" field, so we point them
-# at our custom User model, which logs in with email instead.
-# ---------------------------------------------------------------------------
-
+# Django admin forms for the custom user
 class AdminUserAddForm(AdminUserCreationForm):
     class Meta:
         model = User

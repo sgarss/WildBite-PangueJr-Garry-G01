@@ -6,18 +6,15 @@ from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
-    """Creates users. Django calls this from createsuperuser, forms, tests, etc."""
-
     use_in_migrations = True
 
+    # Store emails in lowercase
     @classmethod
     def normalize_email(cls, email):
-        # Store the WHOLE email in lowercase (Django's default only lowercases
-        # the domain part). This makes "Juan@CIT.edu" and "juan@cit.edu" the same.
         return (email or "").strip().lower()
 
+    # Case-insensitive email lookup on login
     def get_by_natural_key(self, username):
-        # Used during login: lets a user log in even if they type capitals.
         return self.get(**{self.model.USERNAME_FIELD: self.normalize_email(username)})
 
     def _create_user(self, email, password, **extra_fields):
@@ -25,16 +22,19 @@ class UserManager(BaseUserManager):
             raise ValueError("Users must have an email address.")
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
-        user.set_password(password)  # hashes the password, never stores plain text
+        # Hash password
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
+    # New users are students by default
     def create_user(self, email, password=None, **extra_fields):
         extra_fields.setdefault("role", User.Role.STUDENT)
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
         return self._create_user(email, password, **extra_fields)
 
+    # Admin account (STAFF role + Django admin access)
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("role", User.Role.STAFF)
         extra_fields.setdefault("is_staff", True)
@@ -49,41 +49,39 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+# Custom user (users table)
 class User(AbstractBaseUser, PermissionsMixin):
-    """WildBite user. Maps to the `users` table in the SDD."""
-
     class Role(models.TextChoices):
         STUDENT = "STUDENT", "Student"
         STAFF = "STAFF", "Staff"
 
     user_id = models.AutoField(primary_key=True)
     email = models.EmailField(max_length=100, unique=True)
-    # Same field Django already has, renamed in the database to match the SDD.
-    # It holds a HASH such as "pbkdf2_sha256$...", never the real password.
+    # Hashed password, saved as password_hash
     password = models.CharField("password", max_length=255, db_column="password_hash")
     full_name = models.CharField(max_length=100)
     role = models.CharField(
         max_length=10,
         choices=Role.choices,
         default=Role.STUDENT,
-        db_default=Role.STUDENT,  # DEFAULT 'STUDENT' at the database level too
+        db_default=Role.STUDENT,
     )
     created_at = models.DateTimeField(default=timezone.now, db_default=Now())
 
-    # Required by Django admin / auth:
-    # is_active = can log in at all.
-    # is_staff  = can open the Django admin site (/admin/). NOT the same as role STAFF.
+    # is_staff = Django admin access, not the STAFF role
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
     objects = UserManager()
 
+    # Log in with email
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
-    REQUIRED_FIELDS = ["full_name"]  # asked by createsuperuser (email + password are always asked)
+    REQUIRED_FIELDS = ["full_name"]
 
     class Meta:
         db_table = "users"
+        # Role must be STUDENT or STAFF
         constraints = [
             models.CheckConstraint(
                 condition=Q(role__in=["STUDENT", "STAFF"]),
@@ -98,6 +96,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)
 
+    # Role checks
     @property
     def is_student(self):
         return self.role == self.Role.STUDENT

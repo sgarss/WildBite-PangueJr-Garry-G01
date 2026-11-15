@@ -1,7 +1,4 @@
-/* ==========================================================
-   WildBite - plain CSS (no frameworks)
-   Colors are defined once here and reused everywhere.
-   ========================================================== */
+/* Theme colors */
 :root {
   --maroon: #7a1020;
   --maroon-dark: #5c0b17;
@@ -48,7 +45,7 @@ a { color: var(--maroon); }
 
 .muted { color: var(--muted); }
 
-/* ---------- Navbar ---------- */
+/* Navbar */
 .navbar { background: var(--maroon); color: #fff; }
 
 .nav-inner {
@@ -103,7 +100,7 @@ a { color: var(--maroon); }
   padding: 4px 8px;
 }
 
-/* Phones: menu collapses behind the ☰ button */
+/* Mobile menu */
 @media (max-width: 760px) {
   .nav-toggle { display: block; }
   .nav-links {
@@ -117,7 +114,7 @@ a { color: var(--maroon); }
   .nav-links a, .nav-button { width: 100%; text-align: left; }
 }
 
-/* ---------- Alerts (Django messages) ---------- */
+/* Alerts */
 .messages { margin-bottom: 20px; }
 
 .alert {
@@ -147,7 +144,7 @@ a { color: var(--maroon); }
 }
 .alert-close:hover { opacity: 1; }
 
-/* ---------- Buttons ---------- */
+/* Buttons */
 .btn {
   display: inline-block;
   padding: 10px 20px;
@@ -165,7 +162,7 @@ a { color: var(--maroon); }
 .btn-outline:hover { background: var(--maroon); color: #fff; }
 .btn-block { display: block; width: 100%; }
 
-/* ---------- Cards ---------- */
+/* Cards */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -176,14 +173,14 @@ a { color: var(--maroon); }
 .card-center { max-width: 520px; margin: 40px auto; text-align: center; }
 .card h1, .card h2 { margin-top: 0; }
 
-/* ---------- Homepage ---------- */
+/* Homepage */
 .hero { text-align: center; padding: 56px 0 32px; }
 .hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); margin: 0 0 12px; line-height: 1.2; }
 .hero h1 span { color: var(--maroon); display: block; }
 .hero p { color: var(--muted); max-width: 560px; margin: 0 auto 28px; font-size: 1.1rem; }
 .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-/* ---------- Forms ---------- */
+/* Forms */
 .form-card { max-width: 440px; margin: 24px auto; }
 
 .form-group { margin-bottom: 16px; }
@@ -210,14 +207,12 @@ a { color: var(--maroon); }
   box-shadow: 0 0 0 3px rgba(122, 16, 32, 0.15);
 }
 
-/* Field that has an error gets a red border */
 .form-group.has-error input { border-color: var(--error-text); }
 
 .helptext,
 .form-group .help { display: block; font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
 .helptext ul { margin: 4px 0 0; padding-left: 18px; }
 
-/* Django renders errors as <ul class="errorlist"> */
 .errorlist {
   list-style: none;
   margin: 6px 0 0;
@@ -238,7 +233,7 @@ a { color: var(--maroon); }
 
 .form-footer { text-align: center; margin-top: 16px; color: var(--muted); }
 
-/* ---------- Dashboards ---------- */
+/* Dashboards */
 .dashboard-header { margin-bottom: 20px; }
 .dashboard-header h1 { margin: 0; }
 .dashboard-header p { margin: 4px 0 0; }
@@ -265,7 +260,7 @@ a { color: var(--maroon); }
   color: var(--maroon-dark);
 }
 
-/* ---------- Profile ---------- */
+/* Profile */
 .profile-list { margin: 0 0 20px; }
 .profile-list > div {
   display: flex;
@@ -279,7 +274,7 @@ a { color: var(--maroon); }
 
 .form-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 
-/* ---------- Footer ---------- */
+/* Footer */
 .footer {
   border-top: 1px solid var(--border);
   padding: 16px 0;

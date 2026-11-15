@@ -5,12 +5,11 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load secrets from the .env file next to manage.py
+# Load secrets from .env
 load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 
-# True only when .env says DEBUG=True; never use True in production
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = []
@@ -23,7 +22,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # WildBite apps
     'accounts',
 ]
 
@@ -57,7 +55,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'wildbite.wsgi.application'
 
 
-# Supabase PostgreSQL (Session pooler). All credentials come from .env
+# Supabase PostgreSQL (SSL required)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -67,17 +65,17 @@ DATABASES = {
         "HOST": os.environ["DB_HOST"],
         "PORT": os.getenv("DB_PORT", "5432"),
         "OPTIONS": {
-            "sslmode": "require",  # always encrypt the connection
+            "sslmode": "require",
         },
-        "CONN_MAX_AGE": 60,  # reuse connections for 60s for faster page loads
-        "CONN_HEALTH_CHECKS": True,  # reconnect if a reused connection dropped
+        "CONN_MAX_AGE": 60,
+        "CONN_HEALTH_CHECKS": True,
     }
 }
 
 
+# Password rules
 AUTH_PASSWORD_VALIDATORS = [
     {
-        # Rejects passwords too similar to the user's own email or name
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
         'OPTIONS': {'user_attributes': ('email', 'full_name')},
     },
@@ -86,7 +84,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Custom user model (accounts.User -> "users" table). Login uses email.
+# Custom user and login redirects
 AUTH_USER_MODEL = 'accounts.User'
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'accounts:dashboard'

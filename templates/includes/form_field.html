@@ -1,5 +1,4 @@
-{# Draws one form field: label, input, help text and errors. #}
-{# Usage: {% include 'includes/form_field.html' with field=form.email %} #}
+{# Reusable field: label, input, help, errors #}
 <div class="form-group{% if field.errors %} has-error{% endif %}">
   <label for="{{ field.id_for_label }}">{{ field.label }}</label>
   {{ field }}
