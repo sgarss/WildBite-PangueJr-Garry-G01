@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<section class="dashboard-header">
+  <h1>Welcome, {{ user.full_name }}</h1>
+  <p class="muted">Canteen staff dashboard</p>
+</section>
+
+<section class="dashboard-grid">
+  <article class="card dash-card">
+    <span class="badge">Coming soon</span>
+    <h2>Incoming Orders</h2>
+    <p class="muted">View and update orders placed by students.</p>
+  </article>
+
+  <article class="card dash-card">
+    <span class="badge">Coming soon</span>
+    <h2>Menu Items</h2>
+    <p class="muted">Add, edit and hide food items.</p>
+  </article>
+
+  <article class="card dash-card">
+    <span class="badge">Coming soon</span>
+    <h2>Categories</h2>
+    <p class="muted">Organize menu items into categories.</p>
+  </article>
+
+  <article class="card dash-card">
+    <span class="badge">Coming soon</span>
+    <h2>Payments</h2>
+    <p class="muted">Record and confirm order payments.</p>
+  </article>
+
+  <article class="card dash-card">
+    <span class="badge">Coming soon</span>
+    <h2>Sales Report</h2>
+    <p class="muted">See sales totals over time.</p>
+  </article>
+</section>
+{% endblock %}

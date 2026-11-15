@@ -238,6 +238,33 @@ a { color: var(--maroon); }
 
 .form-footer { text-align: center; margin-top: 16px; color: var(--muted); }
 
+/* ---------- Dashboards ---------- */
+.dashboard-header { margin-bottom: 20px; }
+.dashboard-header h1 { margin: 0; }
+.dashboard-header p { margin: 4px 0 0; }
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.dash-card { position: relative; border-top: 4px solid var(--maroon); }
+.dash-card h2 { font-size: 1.2rem; margin: 8px 0 6px; }
+.dash-card p { margin: 0; }
+
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--maroon-dark);
+}
+
 /* ---------- Footer ---------- */
 .footer {
   border-top: 1px solid var(--border);

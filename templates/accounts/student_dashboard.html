@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<section class="dashboard-header">
+  <h1>Welcome, {{ user.full_name }}</h1>
+  <p class="muted">Student dashboard</p>
+</section>
+
+<section class="dashboard-grid">
+  <article class="card dash-card">
+    <span class="badge">Coming soon</span>
+    <h2>Browse Menu</h2>
+    <p class="muted">See today's food and drinks from the canteen.</p>
+  </article>
+
+  <article class="card dash-card">
+    <span class="badge">Coming soon</span>
+    <h2>My Orders</h2>
+    <p class="muted">Track the orders you placed and when they are ready.</p>
+  </article>
+
+  <article class="card dash-card">
+    <span class="badge">Coming soon</span>
+    <h2>Order History</h2>
+    <p class="muted">Look back at your past orders.</p>
+  </article>
+</section>
+{% endblock %}

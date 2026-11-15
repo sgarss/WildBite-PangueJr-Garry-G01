@@ -1,8 +1,12 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render
 
+from .decorators import role_required
 from .forms import EmailLoginForm, RegistrationForm
+from .models import User
 
 
 def register(request):
@@ -48,3 +52,27 @@ class WildBiteLogoutView(LogoutView):
         response = super().post(request, *args, **kwargs)
         messages.info(request, 'You have been logged out.')
         return response
+
+
+# ---------------------------------------------------------------------------
+# Dashboards (BR-18: staff pages must reject students, and vice versa)
+# ---------------------------------------------------------------------------
+
+@login_required
+def dashboard(request):
+    """/dashboard/ - sends each user to the dashboard for their role."""
+    if request.user.role == User.Role.STAFF:
+        return redirect('accounts:staff_dashboard')
+    if request.user.role == User.Role.STUDENT:
+        return redirect('accounts:student_dashboard')
+    raise PermissionDenied  # unknown role (the CHECK constraint should prevent this)
+
+
+@role_required(User.Role.STUDENT)
+def student_dashboard(request):
+    return render(request, 'accounts/student_dashboard.html')
+
+
+@role_required(User.Role.STAFF)
+def staff_dashboard(request):
+    return render(request, 'accounts/staff_dashboard.html')
