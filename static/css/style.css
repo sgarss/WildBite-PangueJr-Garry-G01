@@ -238,6 +238,16 @@ a { color: var(--maroon); }
 .dashboard-header h1 { margin: 0; }
 .dashboard-header p { margin: 4px 0 0; }
 
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.dash-card { position: relative; border-top: 4px solid var(--maroon); }
+.dash-card h2 { font-size: 1.2rem; margin: 8px 0 6px; }
+.dash-card p { margin: 0; }
+
 .badge {
   display: inline-block;
   font-size: 0.75rem;
