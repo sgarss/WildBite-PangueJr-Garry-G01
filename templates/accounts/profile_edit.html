@@ -5,15 +5,30 @@
 {% block content %}
 <section class="card form-card">
   <h1>Edit profile</h1>
-  <p class="muted">You can change your name and email. Your role can only be changed by canteen staff.</p>
+  <p class="muted">Update your name, email, contact number and photo. Your role can only be changed by an admin.</p>
 
-  <form method="post" novalidate>
+  {# multipart is required for photo uploads #}
+  <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     {{ form.non_field_errors }}
 
-    {% for field in form %}
-      {% include 'includes/form_field.html' with field=field %}
-    {% endfor %}
+    {% include 'includes/form_field.html' with field=form.first_name %}
+    {% include 'includes/form_field.html' with field=form.last_name %}
+    {% include 'includes/form_field.html' with field=form.email %}
+    {% include 'includes/form_field.html' with field=form.contact_number %}
+
+    <div class="form-group{% if form.profile_photo.errors %} has-error{% endif %}">
+      <label for="{{ form.profile_photo.id_for_label }}">{{ form.profile_photo.label }}</label>
+      {% if form.old_photo %}
+        <div class="photo-current">
+          <img class="avatar avatar-sm" src="{% url 'accounts:profile_photo' %}?v={{ form.old_photo|slugify }}" alt="Current profile photo">
+          <label class="checkbox">{{ form.remove_photo }} {{ form.remove_photo.label }}</label>
+        </div>
+      {% endif %}
+      {{ form.profile_photo }}
+      <div class="helptext" id="{{ form.profile_photo.auto_id }}_helptext">{{ form.profile_photo.help_text }}</div>
+      {{ form.profile_photo.errors }}
+    </div>
 
     <div class="form-actions">
       <button type="submit" class="btn btn-primary">Save changes</button>

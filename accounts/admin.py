@@ -11,16 +11,16 @@ class UserAdmin(BaseUserAdmin):
     form = AdminUserEditForm
     add_form = AdminUserAddForm
 
-    list_display = ("email", "full_name", "role", "is_active", "created_at")
+    list_display = ("email", "first_name", "last_name", "role", "is_active", "created_at")
     list_filter = ("role", "is_active", "is_staff", "is_superuser")
-    search_fields = ("email", "full_name")
+    search_fields = ("email", "first_name", "last_name")
     ordering = ("email",)
     readonly_fields = ("created_at", "last_login")
 
     # Edit user page
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("Personal info", {"fields": ("full_name", "role")}),
+        ("Personal info", {"fields": ("first_name", "last_name", "contact_number", "role")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Important dates", {"fields": ("last_login", "created_at")}),
     )
@@ -29,6 +29,6 @@ class UserAdmin(BaseUserAdmin):
     add_fieldsets = (
         (None, {
             "classes": ("wide",),
-            "fields": ("email", "full_name", "role", "usable_password", "password1", "password2"),
+            "fields": ("email", "first_name", "last_name", "role", "usable_password", "password1", "password2"),
         }),
     )

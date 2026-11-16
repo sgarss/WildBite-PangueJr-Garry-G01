@@ -7,6 +7,7 @@ from django.contrib.auth.views import (
     PasswordChangeView,
 )
 from django.core.exceptions import PermissionDenied
+from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 
@@ -81,7 +82,7 @@ def profile(request):
 @login_required
 def profile_edit(request):
     if request.method == 'POST':
-        form = ProfileForm(request.POST, instance=request.user)
+        form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             # Save profile changes
             form.save()
@@ -92,6 +93,20 @@ def profile_edit(request):
         form = ProfileForm(instance=request.user)
 
     return render(request, 'accounts/profile_edit.html', {'form': form})
+
+
+# Serve only the logged-in user's own photo (no user ID in the URL)
+@login_required
+def profile_photo(request):
+    photo = request.user.profile_photo
+    if not photo:
+        raise Http404
+    try:
+        response = FileResponse(photo.open('rb'))
+    except FileNotFoundError:
+        raise Http404
+    response['Cache-Control'] = 'private'
+    return response
 
 
 # Change password, stays logged in

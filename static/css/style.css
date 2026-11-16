@@ -272,6 +272,30 @@ a { color: var(--maroon); }
 .profile-list dt { font-weight: 600; color: var(--muted); }
 .profile-list dd { margin: 0; text-align: right; word-break: break-word; }
 
+.profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+.profile-header h1 { margin: 0; }
+
+/* Round photo, or initials when there is no photo */
+.avatar {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--maroon);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.avatar-sm { width: 56px; height: 56px; font-size: 1.1rem; }
+
+.photo-current { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.form-group .checkbox { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; cursor: pointer; }
+.form-group input[type="file"] { width: 100%; font: inherit; }
+
 .form-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 
 /* Footer */
