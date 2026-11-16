@@ -230,18 +230,44 @@ class AccessControlTests(TestCase):
         self.assertContains(response, "Welcome, Canteen Staff")
         self.assertContains(response, "Incoming Orders")
 
-    def test_student_blocked_from_staff_dashboard(self):
+    def test_student_redirected_from_staff_dashboard(self):
         self.client.force_login(self.student)
-        response = self.client.get(reverse("accounts:staff_dashboard"))
-        self.assertEqual(response.status_code, 403)
-        self.assertTemplateUsed(response, "403.html")
-        self.assertContains(response, "permission to view this page", status_code=403)
+        response = self.client.get(reverse("accounts:staff_dashboard"), follow=True)
+        self.assertRedirects(response, reverse("accounts:student_dashboard"))
+        self.assertNotContains(response, "permission")
+        self.assertNotContains(response, "Incoming Orders")
 
-    def test_staff_blocked_from_student_dashboard(self):
+    def test_staff_redirected_from_student_dashboard(self):
         self.client.force_login(self.staff)
-        response = self.client.get(reverse("accounts:student_dashboard"))
-        self.assertEqual(response.status_code, 403)
-        self.assertTemplateUsed(response, "403.html")
+        response = self.client.get(reverse("accounts:student_dashboard"), follow=True)
+        self.assertRedirects(response, reverse("accounts:staff_dashboard"))
+        self.assertNotContains(response, "permission")
+        self.assertNotContains(response, "Browse Menu")
+
+    def test_student_redirected_from_admin_site(self):
+        self.client.force_login(self.student)
+        for url in ["/admin/", "/admin/accounts/user/"]:
+            with self.subTest(url=url):
+                response = self.client.get(url, follow=True)
+                self.assertRedirects(response, reverse("accounts:student_dashboard"))
+                self.assertNotContains(response, "not authorized")
+
+    def test_staff_without_admin_access_redirected_from_admin_site(self):
+        self.client.force_login(self.staff)
+        response = self.client.get("/admin/", follow=True)
+        self.assertRedirects(response, reverse("accounts:staff_dashboard"))
+        self.assertNotContains(response, "not authorized")
+
+    def test_admin_can_open_admin_site(self):
+        admin = User.objects.create_superuser(email="admin@cit.edu", password=PASSWORD, full_name="Admin")
+        self.client.force_login(admin)
+        self.assertEqual(self.client.get("/admin/").status_code, 200)
+        self.assertEqual(self.client.get("/admin/accounts/user/").status_code, 200)
+
+    def test_anonymous_sees_admin_login(self):
+        response = self.client.get("/admin/", follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "admin/login.html")
 
 
 class ProfileTests(TestCase):
