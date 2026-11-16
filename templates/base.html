@@ -31,7 +31,14 @@
             <a href="{% url 'coming_soon' 'my-orders' %}">My Orders</a>
           {% endif %}
 
-          <a href="{% url 'accounts:profile' %}">Profile</a>
+          {# Profile photo, or initials when there is no photo #}
+          <a href="{% url 'accounts:profile' %}" class="nav-avatar" title="My profile" aria-label="My profile">
+            {% if user.profile_photo %}
+              <img class="avatar avatar-nav" src="{% url 'accounts:profile_photo' %}?v={{ user.profile_photo.name|slugify }}" alt="">
+            {% else %}
+              <span class="avatar avatar-nav">{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}</span>
+            {% endif %}
+          </a>
 
           {# Logout must be POST #}
           <form method="post" action="{% url 'accounts:logout' %}" class="logout-form">

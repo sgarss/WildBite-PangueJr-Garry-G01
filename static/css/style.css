@@ -81,6 +81,17 @@ a { color: var(--maroon); }
 .nav-links .nav-cta { background: var(--gold); color: var(--maroon-dark); font-weight: 600; }
 .nav-links .nav-cta:hover { background: #ffc928; }
 
+/* Profile picture link */
+.nav-links .nav-avatar { display: flex; padding: 4px; border-radius: 50%; }
+.avatar.avatar-nav {
+  width: 34px;
+  height: 34px;
+  font-size: 0.85rem;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  background: var(--gold);
+  color: var(--maroon-dark);
+}
+
 .logout-form { margin: 0; }
 .nav-button {
   background: transparent;
@@ -112,6 +123,7 @@ a { color: var(--maroon); }
   }
   .nav-links.open { display: flex; }
   .nav-links a, .nav-button { width: 100%; text-align: left; }
+  .nav-links .nav-avatar { width: auto; align-self: flex-start; }
 }
 
 /* Alerts */
