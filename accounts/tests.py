@@ -258,6 +258,16 @@ class AccessControlTests(TestCase):
         self.assertRedirects(response, reverse("accounts:staff_dashboard"))
         self.assertNotContains(response, "not authorized")
 
+    def test_staff_with_is_staff_but_not_superuser_redirected_from_admin_site(self):
+        self.staff.is_staff = True
+        self.staff.save()
+        self.client.force_login(self.staff)
+        for url in ["/admin/", "/admin/accounts/user/"]:
+            with self.subTest(url=url):
+                response = self.client.get(url, follow=True)
+                self.assertRedirects(response, reverse("accounts:staff_dashboard"))
+                self.assertNotContains(response, "permission")
+
     def test_admin_can_open_admin_site(self):
         admin = User.objects.create_superuser(email="admin@cit.edu", password=PASSWORD, full_name="Admin")
         self.client.force_login(admin)
