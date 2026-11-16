@@ -470,6 +470,16 @@ class ProfileTests(TestCase):
         self.assertEqual(status, 200)
         self.assertNotEqual(alice_bytes, bob_bytes)
 
+    def test_navbar_shows_profile_picture_or_initials(self):
+        response = self.client.get(reverse("accounts:student_dashboard"))
+        self.assertContains(response, 'class="avatar avatar-nav">AR</span>', html=False)
+        self.assertNotContains(response, ">Profile</a>")
+
+        self.edit(profile_photo=make_image())
+        response = self.client.get(reverse("accounts:student_dashboard"))
+        self.assertContains(response, f'src="{reverse("accounts:profile_photo")}?v=')
+        self.assertContains(response, 'aria-label="My profile"')
+
     def test_anonymous_cannot_view_profile_or_photo(self):
         self.client.logout()
         for name in ["accounts:profile", "accounts:profile_edit", "accounts:profile_photo"]:
