@@ -17,20 +17,6 @@
       <nav id="nav-links" class="nav-links">
         {% if user.is_authenticated %}
           <a href="{% url 'accounts:dashboard' %}">Dashboard</a>
-
-          {% if user.is_canteen_staff %}
-            {# Staff links #}
-            <a href="{% url 'coming_soon' 'orders' %}">Orders</a>
-            <a href="{% url 'coming_soon' 'menu-items' %}">Menu Items</a>
-            <a href="{% url 'coming_soon' 'categories' %}">Categories</a>
-            <a href="{% url 'coming_soon' 'payments' %}">Payments</a>
-            <a href="{% url 'coming_soon' 'reports' %}">Reports</a>
-          {% else %}
-            {# Student links #}
-            <a href="{% url 'coming_soon' 'menu' %}">Menu</a>
-            <a href="{% url 'coming_soon' 'my-orders' %}">My Orders</a>
-          {% endif %}
-
           <a href="{% url 'accounts:profile' %}">Profile</a>
 
           {# Logout must be POST #}

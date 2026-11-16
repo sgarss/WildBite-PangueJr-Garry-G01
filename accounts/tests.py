@@ -222,13 +222,13 @@ class AccessControlTests(TestCase):
         self.client.force_login(self.student)
         response = self.client.get(reverse("accounts:student_dashboard"))
         self.assertContains(response, "Welcome, Stu Dent")
-        self.assertContains(response, "Browse Menu")
+        self.assertContains(response, "Student dashboard")
 
     def test_staff_sees_own_dashboard(self):
         self.client.force_login(self.staff)
         response = self.client.get(reverse("accounts:staff_dashboard"))
         self.assertContains(response, "Welcome, Canteen Staff")
-        self.assertContains(response, "Incoming Orders")
+        self.assertContains(response, "Canteen staff dashboard")
 
     def test_student_blocked_from_staff_dashboard(self):
         self.client.force_login(self.student)
