@@ -18,6 +18,7 @@ urlpatterns = [
     # Profile and password
     path('accounts/profile/', views.profile, name='profile'),
     path('accounts/profile/edit/', views.profile_edit, name='profile_edit'),
+    path('accounts/profile/photo/', views.profile_photo, name='profile_photo'),
     path('accounts/password/change/', views.WildBitePasswordChangeView.as_view(), name='password_change'),
     path('accounts/password/change/done/', views.WildBitePasswordChangeDoneView.as_view(), name='password_change_done'),
 ]

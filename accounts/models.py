@@ -1,8 +1,19 @@
+import uuid
+from pathlib import Path
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Now
 from django.utils import timezone
+
+PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"]
+
+
+# Random file name so photo paths can't be guessed
+def profile_photo_path(instance, filename):
+    return f"profile_photos/{uuid.uuid4().hex}{Path(filename).suffix.lower()}"
 
 
 class UserManager(BaseUserManager):
@@ -59,7 +70,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=100, unique=True)
     # Hashed password, saved as password_hash
     password = models.CharField("password", max_length=255, db_column="password_hash")
-    full_name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    contact_number = models.CharField(max_length=20, blank=True, default="")
+    profile_photo = models.ImageField(
+        upload_to=profile_photo_path,
+        max_length=255,
+        blank=True,
+        validators=[FileExtensionValidator(PHOTO_EXTENSIONS)],
+    )
     role = models.CharField(
         max_length=10,
         choices=Role.choices,
@@ -77,7 +96,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Log in with email
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
-    REQUIRED_FIELDS = ["full_name"]
+    REQUIRED_FIELDS = ["first_name", "last_name"]
 
     class Meta:
         db_table = "users"
@@ -95,6 +114,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     def clean(self):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)
+
+    # First + last name for greetings and display
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
+    def get_full_name(self):
+        return self.full_name
+
+    def get_short_name(self):
+        return self.first_name
 
     # Role checks
     @property

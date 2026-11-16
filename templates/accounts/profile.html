@@ -4,16 +4,31 @@
 
 {% block content %}
 <section class="card form-card">
-  <h1>My profile</h1>
+  <div class="profile-header">
+    {% if profile_user.profile_photo %}
+      <img class="avatar" src="{% url 'accounts:profile_photo' %}?v={{ profile_user.profile_photo.name|slugify }}" alt="Profile photo">
+    {% else %}
+      <div class="avatar" aria-hidden="true">{{ profile_user.first_name|slice:":1"|upper }}{{ profile_user.last_name|slice:":1"|upper }}</div>
+    {% endif %}
+    <h1>My profile</h1>
+  </div>
 
   <dl class="profile-list">
     <div>
-      <dt>Full name</dt>
-      <dd>{{ profile_user.full_name }}</dd>
+      <dt>First name</dt>
+      <dd>{{ profile_user.first_name }}</dd>
+    </div>
+    <div>
+      <dt>Last name</dt>
+      <dd>{{ profile_user.last_name|default:"Not set" }}</dd>
     </div>
     <div>
       <dt>Email</dt>
       <dd>{{ profile_user.email }}</dd>
+    </div>
+    <div>
+      <dt>Contact number</dt>
+      <dd>{{ profile_user.contact_number|default:"Not set" }}</dd>
     </div>
     <div>
       <dt>Role</dt>
