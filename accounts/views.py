@@ -24,7 +24,6 @@ def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            # Create student account
             form.save()
             messages.success(request, 'Account created successfully. Please log in.')
             return redirect('accounts:login')
@@ -61,13 +60,11 @@ def dashboard(request):
     raise PermissionDenied
 
 
-# Students only
 @role_required(User.Role.STUDENT)
 def student_dashboard(request):
     return render(request, 'accounts/student_dashboard.html')
 
 
-# Canteen staff only
 @role_required(User.Role.STAFF)
 def staff_dashboard(request):
     return render(request, 'accounts/staff_dashboard.html')
@@ -84,7 +81,6 @@ def profile_edit(request):
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            # Save profile changes
             form.save()
             messages.success(request, 'Profile updated successfully.')
             return redirect('accounts:profile')

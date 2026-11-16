@@ -36,10 +36,10 @@
           {# Logout must be POST #}
           <form method="post" action="{% url 'accounts:logout' %}" class="logout-form">
             {% csrf_token %}
-            <button type="submit" class="nav-button">Logout</button>
+            <button type="submit" class="nav-button">Log out</button>
           </form>
         {% else %}
-          <a href="{% url 'accounts:login' %}">Login</a>
+          <a href="{% url 'accounts:login' %}">Log in</a>
           <a href="{% url 'accounts:register' %}" class="nav-cta">Register</a>
         {% endif %}
       </nav>

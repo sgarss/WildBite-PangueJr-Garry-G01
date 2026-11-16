@@ -9,6 +9,6 @@ def home(request):
 
 
 # Placeholder for features not built yet
-def coming_soon(request, feature='', title=None):
-    title = title or feature.replace('-', ' ').title() or 'This page'
+def coming_soon(request, feature):
+    title = feature.replace('-', ' ').title()
     return render(request, 'coming_soon.html', {'title': title})
