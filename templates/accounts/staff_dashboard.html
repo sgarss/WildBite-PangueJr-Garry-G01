@@ -18,12 +18,13 @@
   <article class="card dash-card">
     <h2>Menu Items</h2>
     <p class="muted">Add, edit and hide food items.</p>
-    <p><a class="btn btn-outline" href="{% url 'orders:staff_menu' %}">Manage menu</a></p>
+    <a class="btn btn-outline" href="{% url 'menu:list' %}">Manage menu</a>
   </article>
 
   <article class="card dash-card">
     <h2>Categories</h2>
     <p class="muted">Organize menu items into categories.</p>
+    <a class="btn btn-outline" href="{% url 'menu:category_list' %}">Manage categories</a>
   </article>
 
   <article class="card dash-card">
