@@ -7,6 +7,8 @@ WildBite is a food pre-ordering system for the CIT-U canteen. Students can creat
 ```
 WildBite-PangueJr-Garry-G01/
 ├── accounts/          # User accounts: registration, login, roles, profiles
+├── menu/              # Categories and menu items, menu search
+├── orders/            # Food ordering: orders, order items, status history, payments
 ├── static/            # CSS and JavaScript files
 ├── templates/         # HTML pages (Django templates)
 ├── wildbite/          # Project settings and main URL routes
@@ -124,15 +126,45 @@ python manage.py createsuperuser
 
 Log in at http://127.0.0.1:8000/admin/ to manage users and create canteen staff accounts.
 
-## Food Ordering
+## Core Feature: Food Ordering
 
-Students can browse available canteen items, place an order with multiple items, view
-their order history, edit pending orders, and delete pending orders. Canteen staff can
-create, update, and delete unused menu items and update orders through their status
-workflow. Orders and menu items are stored in the configured database and linked to
-the student or staff member who created them.
+Students order food from the canteen ahead of time and pick it up when it's ready. They pay in cash on pickup.
 
-After setting up the database, run `python manage.py migrate`, then create at least
-one staff account from the Django admin or by setting a user's role to `STAFF`.
-Students use **Menu** and **My Orders** from their dashboard; staff use **Orders**
-and **Menu Items**.
+**Students**
+- Browse the menu, search by name and filter by category or availability
+- Place an order with one or more available items and get an order number (for example `WB-261118-001`)
+- Track the order status (Pending → Preparing → Ready for pickup → Completed) and see its history
+- Edit or cancel an order while it is still Pending
+- See past orders under **My Orders → Order history**
+
+**Canteen staff**
+- Add, edit and delete categories and menu items, and mark items available or unavailable
+- View all orders, search by order number and filter by status or date
+- Move an order to the next status (each change is saved with the staff member and time)
+- Record the cash payment when the student picks up the order, then mark it Completed
+
+**Rules**
+- Only available items can be ordered, and each order needs at least one item
+- Each order item keeps the price at the time of ordering, so later price changes don't affect it
+- Status only moves forward, and an order can only be Completed after it is paid
+- Students can only see and change their own orders
+- A category with items, or a menu item that is part of an order, can't be deleted (mark the item unavailable instead)
+
+The data is stored in Supabase in the `categories`, `menu_items`, `orders`, `order_items`, `order_status_history` and `payments` tables.
+
+### Try the ordering flow
+
+1. Finish the Local Setup steps above, including `python manage.py migrate`.
+2. Create a staff account: run `python manage.py createsuperuser` (superusers have the STAFF role), or add a user with the **Staff** role in http://127.0.0.1:8000/admin/.
+3. Log in as staff, open **Categories** and add a few (for example Rice Meals and Drinks), then open **Menu Items** and add items.
+4. Register a student account, open **Menu**, click **Order now**, enter quantities and place the order.
+5. Log in as staff again, open **Orders**, and move the order to Preparing and then Ready for pickup.
+6. Click **Record cash payment**, then **Mark as Completed**. The student sees each change under **My Orders**.
+
+### Run the tests
+
+```
+python manage.py test accounts menu orders --keepdb
+```
+
+The tests run on a Supabase test database. `--keepdb` keeps it between runs, because the Supabase connection pooler doesn't allow dropping it.
