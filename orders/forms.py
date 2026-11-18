@@ -1,5 +1,7 @@
 from django import forms
 
+from .models import OrderStatus
+
 MAX_QUANTITY = 20
 
 
@@ -33,3 +35,20 @@ class OrderItemsForm(forms.Form):
         if not self.errors and not self.quantities:
             raise forms.ValidationError("Choose at least one menu item.")
         return cleaned_data
+
+
+class OrderFilterForm(forms.Form):
+    q = forms.CharField(
+        required=False,
+        label="Order number",
+        widget=forms.SearchInput(attrs={"placeholder": "e.g. WB-261118-001"}),
+    )
+    status = forms.ChoiceField(
+        choices=[("", "All statuses")] + OrderStatus.choices,
+        required=False,
+    )
+    date = forms.DateField(
+        required=False,
+        label="Order date",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )

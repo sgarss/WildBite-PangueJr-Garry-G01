@@ -10,7 +10,7 @@ from accounts.models import User
 from menu.models import MenuItem
 
 from . import services
-from .forms import OrderItemsForm
+from .forms import OrderFilterForm, OrderItemsForm
 from .models import Order, OrderStatus
 
 student_only = role_required(User.Role.STUDENT)
@@ -113,7 +113,39 @@ def cancel_order(request, pk):
     return redirect("orders:my_orders")
 
 
+# Incoming orders with search and filters
 @staff_only
 def staff_orders(request):
+    form = OrderFilterForm(request.GET)
     orders = visible_orders(request.user)
-    return render(request, "orders/staff_orders.html", {"orders": orders})
+
+    if form.is_valid():
+        query = form.cleaned_data["q"].strip()
+        status = form.cleaned_data["status"]
+        date = form.cleaned_data["date"]
+        if query:
+            orders = orders.filter(order_number__icontains=query)
+        if status:
+            orders = orders.filter(status=status)
+        if date:
+            orders = orders.filter(order_date__date=date)
+
+    filtering = any(request.GET.get(key) for key in ("q", "status", "date"))
+    return render(request, "orders/staff_orders.html", {
+        "form": form,
+        "orders": orders,
+        "filtering": filtering,
+    })
+
+
+@staff_only
+@require_POST
+def advance_status(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    try:
+        order = services.advance_status(order, request.user)
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+    else:
+        messages.success(request, f"Order {order} is now {order.get_status_display()}.")
+    return redirect("orders:detail", pk=pk)

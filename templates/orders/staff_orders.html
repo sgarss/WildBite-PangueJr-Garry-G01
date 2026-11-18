@@ -10,9 +10,31 @@
   </div>
 </section>
 
+{# Search and filters #}
+<form method="get" class="card filter-bar">
+  <div class="form-group">
+    <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
+    {{ form.q }}
+  </div>
+  <div class="form-group">
+    <label for="{{ form.status.id_for_label }}">Status</label>
+    {{ form.status }}
+  </div>
+  <div class="form-group">
+    <label for="{{ form.date.id_for_label }}">{{ form.date.label }}</label>
+    {{ form.date }}
+  </div>
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if filtering %}<a class="btn btn-outline" href="{% url 'orders:staff_orders' %}">Clear</a>{% endif %}
+  </div>
+</form>
+
 {% if orders %}
   {% include 'orders/includes/order_table.html' with show_student=True %}
 {% else %}
-  <section class="card empty-state"><p>No orders yet.</p></section>
+  <section class="card empty-state">
+    <p>{% if filtering %}No orders match your search.{% else %}No orders yet.{% endif %}</p>
+  </section>
 {% endif %}
 {% endblock %}

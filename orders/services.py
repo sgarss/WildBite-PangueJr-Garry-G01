@@ -102,6 +102,22 @@ def update_order(order, quantities):
     return order
 
 
+# Move the order one step forward and record who did it
+@transaction.atomic
+def advance_status(order, staff):
+    order = Order.objects.select_for_update().get(pk=order.pk)
+    new_status = order.next_status
+    if new_status is None:
+        raise ValidationError("This order is already completed.")
+    if new_status == OrderStatus.COMPLETED and not order.payment.is_paid:
+        raise ValidationError("Record the cash payment before completing this order.")
+
+    order.status = new_status
+    order.save(update_fields=["status"])
+    OrderStatusHistory.objects.create(order=order, changed_by=staff, status=new_status)
+    return order
+
+
 # Cancelling deletes the order with its items, history and payment
 @transaction.atomic
 def cancel_order(order):

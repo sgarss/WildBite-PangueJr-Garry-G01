@@ -65,6 +65,16 @@
         </p>
       {% endif %}
     </section>
+    {% if user.is_canteen_staff and order.next_status %}
+      <section class="card">
+        <h2>Update order</h2>
+        <form method="post" action="{% url 'orders:advance_status' order.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary btn-block">Mark as {{ order.next_status.label }}</button>
+        </form>
+      </section>
+    {% endif %}
+
     {% if not user.is_canteen_staff and order.is_pending %}
       <section class="card">
         <h2>Change your order</h2>

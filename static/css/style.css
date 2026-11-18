@@ -204,6 +204,7 @@ a { color: var(--maroon); }
 .form-group input[type="password"],
 .form-group input[type="number"],
 .form-group input[type="search"],
+.form-group input[type="date"],
 .form-group select,
 .form-group textarea {
   width: 100%;
