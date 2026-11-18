@@ -261,6 +261,7 @@ a { color: var(--maroon); }
 .dash-card { position: relative; border-top: 4px solid var(--maroon); }
 .dash-card h2 { font-size: 1.2rem; margin: 8px 0 6px; }
 .dash-card p { margin: 0; }
+.dash-card .btn { margin-top: 14px; padding: 6px 14px; font-size: 0.9rem; }
 
 .badge {
   display: inline-block;

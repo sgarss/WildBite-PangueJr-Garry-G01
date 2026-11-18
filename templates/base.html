@@ -21,13 +21,13 @@
           {% if user.is_canteen_staff %}
             {# Staff links #}
             <a href="{% url 'coming_soon' 'orders' %}">Orders</a>
-            <a href="{% url 'coming_soon' 'menu-items' %}">Menu Items</a>
-            <a href="{% url 'coming_soon' 'categories' %}">Categories</a>
+            <a href="{% url 'menu:list' %}">Menu Items</a>
+            <a href="{% url 'menu:category_list' %}">Categories</a>
             <a href="{% url 'coming_soon' 'payments' %}">Payments</a>
             <a href="{% url 'coming_soon' 'reports' %}">Reports</a>
           {% else %}
             {# Student links #}
-            <a href="{% url 'coming_soon' 'menu' %}">Menu</a>
+            <a href="{% url 'menu:list' %}">Menu</a>
             <a href="{% url 'coming_soon' 'my-orders' %}">My Orders</a>
           {% endif %}
 
