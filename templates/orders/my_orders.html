@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>My Orders</h1>
+    <p class="muted">Track your orders and pay in cash when you pick them up.</p>
+  </div>
+</section>
+
+<h2 class="section-title">Current orders</h2>
+{% if current %}
+  {% include 'orders/includes/order_table.html' with orders=current %}
+{% else %}
+  <section class="card empty-state"><p>You have no current orders.</p></section>
+{% endif %}
+
+<h2 class="section-title" id="history">Order history</h2>
+{% if history %}
+  {% include 'orders/includes/order_table.html' with orders=history %}
+{% else %}
+  <section class="card empty-state"><p>Completed orders will show here.</p></section>
+{% endif %}
+{% endblock %}

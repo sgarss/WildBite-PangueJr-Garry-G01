@@ -1,23 +1,28 @@
 from django.contrib import admin
 
-from .models import MenuItem, Order, OrderItem
+from .models import Order, OrderItem, OrderStatusHistory, Payment
 
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ('unit_price',)
 
 
-@admin.register(MenuItem)
-class MenuItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'price', 'is_available', 'created_by')
-    list_filter = ('category', 'is_available')
-    search_fields = ('name', 'category')
+class StatusHistoryInline(admin.TabularInline):
+    model = OrderStatusHistory
+    extra = 0
+    readonly_fields = ("changed_at",)
+
+
+class PaymentInline(admin.StackedInline):
+    model = Payment
+    extra = 0
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'status', 'total_amount', 'created_at')
-    list_filter = ('status', 'created_at')
-    inlines = (OrderItemInline,)
+    list_display = ("order_number", "user", "status", "total_amount", "order_date")
+    list_filter = ("status", "order_date")
+    search_fields = ("order_number", "user__email")
+    readonly_fields = ("order_date",)
+    inlines = (OrderItemInline, StatusHistoryInline, PaymentInline)

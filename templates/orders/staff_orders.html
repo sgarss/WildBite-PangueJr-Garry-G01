@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Incoming Orders{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Incoming Orders</h1>
+    <p class="muted">Orders placed by students, newest first.</p>
+  </div>
+</section>
+
+{% if orders %}
+  {% include 'orders/includes/order_table.html' with show_student=True %}
+{% else %}
+  <section class="card empty-state"><p>No orders yet.</p></section>
+{% endif %}
+{% endblock %}

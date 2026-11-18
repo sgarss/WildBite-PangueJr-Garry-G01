@@ -1,0 +1,27 @@
+{# Orders table, used by My Orders and Incoming Orders #}
+<div class="card table-card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Order no.</th>
+        {% if show_student %}<th>Student</th>{% endif %}
+        <th>Date</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Payment</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+        <tr>
+          <td>{{ order.order_number }}</td>
+          {% if show_student %}<td>{{ order.user.full_name }}</td>{% endif %}
+          <td>{{ order.order_date|date:"M j, Y g:i A" }}</td>
+          <td>&#8369;{{ order.total_amount|floatformat:"2g" }}</td>
+          <td><span class="badge status-{{ order.status|lower }}">{{ order.get_status_display }}</span></td>
+          <td>{{ order.payment.get_payment_status_display }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
