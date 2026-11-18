@@ -23,7 +23,7 @@
             <a href="{% url 'orders:staff_orders' %}">Orders</a>
             <a href="{% url 'menu:list' %}">Menu Items</a>
             <a href="{% url 'menu:category_list' %}">Categories</a>
-            <a href="{% url 'coming_soon' 'payments' %}">Payments</a>
+            <a href="{% url 'orders:staff_orders' %}?status=READY">Payments</a>
             <a href="{% url 'coming_soon' 'reports' %}">Reports</a>
           {% else %}
             {# Student links #}
