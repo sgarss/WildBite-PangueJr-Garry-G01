@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if staff_view %}Incoming Orders{% else %}My Orders{% endif %}{% endblock %}
+
+{% block content %}
+<section class="dashboard-header">
+  <h1>{% if staff_view %}Incoming Orders{% else %}My Orders{% endif %}</h1>
+  {% if not staff_view %}<p><a class="btn btn-primary" href="{% url 'orders:menu' %}">Order from menu</a></p>{% endif %}
+</section>
+
+{% if orders %}
+  <div class="dashboard-grid">
+    {% for order in orders %}
+      <article class="card dash-card">
+        <h2>Order #{{ order.pk }}</h2>
+        {% if staff_view %}<p>{{ order.user.full_name }} · {{ order.user.email }}</p>{% endif %}
+        <p><span class="badge">{{ order.get_status_display }}</span></p>
+        <p>{{ order.items.count }} item{{ order.items.count|pluralize }} · ${{ order.total_amount|floatformat:2 }}</p>
+        <p class="muted">{{ order.created_at|date:"M j, Y, g:i a" }}</p>
+        <a class="btn btn-outline" href="{% url 'orders:detail' order.pk %}">View order</a>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card"><p class="muted">There are no orders to show.</p></div>
+{% endif %}
+{% endblock %}

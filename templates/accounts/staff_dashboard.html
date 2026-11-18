@@ -12,11 +12,13 @@
   <article class="card dash-card">
     <h2>Incoming Orders</h2>
     <p class="muted">View and update orders placed by students.</p>
+    <p><a class="btn btn-primary" href="{% url 'orders:staff_orders' %}">Manage orders</a></p>
   </article>
 
   <article class="card dash-card">
     <h2>Menu Items</h2>
     <p class="muted">Add, edit and hide food items.</p>
+    <p><a class="btn btn-outline" href="{% url 'orders:staff_menu' %}">Manage menu</a></p>
   </article>
 
   <article class="card dash-card">

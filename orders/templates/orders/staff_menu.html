@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Menu{% endblock %}
+
+{% block content %}
+<section class="dashboard-header">
+  <h1>Manage Menu</h1>
+  <p><a class="btn btn-primary" href="{% url 'orders:create_menu_item' %}">Add menu item</a></p>
+</section>
+
+{% if menu_items %}
+  <div class="dashboard-grid">
+    {% for item in menu_items %}
+      <article class="card dash-card">
+        <h2>{{ item.name }}</h2>
+        {% if item.category %}<p class="muted">{{ item.category }}</p>{% endif %}
+        <p>${{ item.price|floatformat:2 }} · {% if item.is_available %}Available{% else %}Unavailable{% endif %}</p>
+        <p class="muted">Added by {{ item.created_by.full_name }}</p>
+        <div class="form-actions">
+          <a class="btn btn-outline" href="{% url 'orders:edit_menu_item' item.pk %}">Edit</a>
+          <a class="btn btn-outline" href="{% url 'orders:delete_menu_item' item.pk %}">Delete</a>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card"><p class="muted">The menu is empty. Add your first item.</p></div>
+{% endif %}
+{% endblock %}

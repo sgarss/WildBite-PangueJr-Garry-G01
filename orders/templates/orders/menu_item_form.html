@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<form method="post" class="card form-card">
+  {% csrf_token %}
+  <h1>{{ title }}</h1>
+  {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
+  {% for field in form %}
+    <div class="form-group{% if field.errors %} has-error{% endif %}">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {{ field.errors }}
+    </div>
+  {% endfor %}
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">Save</button>
+    <a class="btn btn-outline" href="{% url 'orders:staff_menu' %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

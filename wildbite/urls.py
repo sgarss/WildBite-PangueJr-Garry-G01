@@ -9,4 +9,5 @@ urlpatterns = [
     path('coming-soon/<slug:feature>/', views.coming_soon, name='coming_soon'),
     # Account pages
     path('', include('accounts.urls')),
+    path('orders/', include('orders.urls')),
 ]

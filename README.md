@@ -123,3 +123,16 @@ python manage.py createsuperuser
 ```
 
 Log in at http://127.0.0.1:8000/admin/ to manage users and create canteen staff accounts.
+
+## Food Ordering
+
+Students can browse available canteen items, place an order with multiple items, view
+their order history, edit pending orders, and delete pending orders. Canteen staff can
+create, update, and delete unused menu items and update orders through their status
+workflow. Orders and menu items are stored in the configured database and linked to
+the student or staff member who created them.
+
+After setting up the database, run `python manage.py migrate`, then create at least
+one staff account from the Django admin or by setting a user's role to `STAFF`.
+Students use **Menu** and **My Orders** from their dashboard; staff use **Orders**
+and **Menu Items**.
