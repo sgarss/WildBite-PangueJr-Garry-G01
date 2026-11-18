@@ -12,21 +12,25 @@
   <article class="card dash-card">
     <h2>Incoming Orders</h2>
     <p class="muted">View and update orders placed by students.</p>
+    <a class="btn btn-outline" href="{% url 'orders:staff_orders' %}">Manage orders</a>
   </article>
 
   <article class="card dash-card">
     <h2>Menu Items</h2>
     <p class="muted">Add, edit and hide food items.</p>
+    <a class="btn btn-outline" href="{% url 'menu:list' %}">Manage menu</a>
   </article>
 
   <article class="card dash-card">
     <h2>Categories</h2>
     <p class="muted">Organize menu items into categories.</p>
+    <a class="btn btn-outline" href="{% url 'menu:category_list' %}">Manage categories</a>
   </article>
 
   <article class="card dash-card">
     <h2>Payments</h2>
     <p class="muted">Record and confirm order payments.</p>
+    <a class="btn btn-outline" href="{% url 'orders:staff_orders' %}?status=READY">Orders to pay</a>
   </article>
 
   <article class="card dash-card">
