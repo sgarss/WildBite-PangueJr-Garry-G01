@@ -18,11 +18,13 @@
   <article class="card dash-card">
     <h2>My Orders</h2>
     <p class="muted">Track the orders you placed and when they are ready.</p>
+    <a class="btn btn-outline" href="{% url 'orders:my_orders' %}">View my orders</a>
   </article>
 
   <article class="card dash-card">
     <h2>Order History</h2>
     <p class="muted">Look back at your past orders.</p>
+    <a class="btn btn-outline" href="{% url 'orders:my_orders' %}#history">View history</a>
   </article>
 </section>
 {% endblock %}

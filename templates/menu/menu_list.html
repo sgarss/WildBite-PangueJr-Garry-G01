@@ -13,6 +13,8 @@
       <a class="btn btn-outline" href="{% url 'menu:category_list' %}">Categories</a>
       <a class="btn btn-primary" href="{% url 'menu:item_add' %}">Add item</a>
     </div>
+  {% else %}
+    <a class="btn btn-primary" href="{% url 'orders:place' %}">Order now</a>
   {% endif %}
 </section>
 

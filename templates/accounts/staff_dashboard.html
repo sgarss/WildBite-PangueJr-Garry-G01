@@ -12,6 +12,7 @@
   <article class="card dash-card">
     <h2>Incoming Orders</h2>
     <p class="muted">View and update orders placed by students.</p>
+    <a class="btn btn-outline" href="{% url 'orders:staff_orders' %}">Manage orders</a>
   </article>
 
   <article class="card dash-card">
@@ -29,6 +30,7 @@
   <article class="card dash-card">
     <h2>Payments</h2>
     <p class="muted">Record and confirm order payments.</p>
+    <a class="btn btn-outline" href="{% url 'orders:staff_orders' %}?status=READY">Orders to pay</a>
   </article>
 
   <article class="card dash-card">

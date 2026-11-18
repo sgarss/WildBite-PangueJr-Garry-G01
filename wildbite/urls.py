@@ -10,4 +10,5 @@ urlpatterns = [
     # Account pages
     path('', include('accounts.urls')),
     path('menu/', include('menu.urls')),
+    path('orders/', include('orders.urls')),
 ]
