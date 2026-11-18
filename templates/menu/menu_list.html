@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Menu{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Menu</h1>
+    <p class="muted">Food and drinks from the CIT-U canteen.</p>
+  </div>
+  {% if user.is_canteen_staff %}
+    <div class="actions">
+      <a class="btn btn-outline" href="{% url 'menu:category_list' %}">Categories</a>
+      <a class="btn btn-primary" href="{% url 'menu:item_add' %}">Add item</a>
+    </div>
+  {% endif %}
+</section>
+
+{# Search and filters #}
+<form method="get" class="card filter-bar">
+  <div class="form-group">
+    <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
+    {{ form.q }}
+  </div>
+  <div class="form-group">
+    <label for="{{ form.category.id_for_label }}">Category</label>
+    {{ form.category }}
+  </div>
+  <div class="form-group">
+    <label for="{{ form.availability.id_for_label }}">Availability</label>
+    {{ form.availability }}
+  </div>
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if filtering %}<a class="btn btn-outline" href="{% url 'menu:list' %}">Clear</a>{% endif %}
+  </div>
+</form>
+
+{% regroup items by category as groups %}
+{% for group in groups %}
+  <section class="card menu-group">
+    <h2>{{ group.grouper }}</h2>
+    {% for item in group.list %}
+      <div class="menu-item{% if not item.is_available %} is-unavailable{% endif %}">
+        <div>
+          <h3>
+            {{ item.name }}
+            {% if not item.is_available %}<span class="badge badge-muted">Unavailable</span>{% endif %}
+          </h3>
+          {% if item.description %}<p class="muted">{{ item.description }}</p>{% endif %}
+        </div>
+
+        <div class="menu-item-side">
+          <span class="price">&#8369;{{ item.price|floatformat:"2g" }}</span>
+          {% if user.is_canteen_staff %}
+            <div class="item-actions">
+              <form method="post" action="{% url 'menu:item_toggle' item.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="link-button">
+                  {% if item.is_available %}Mark unavailable{% else %}Mark available{% endif %}
+                </button>
+              </form>
+              <a href="{% url 'menu:item_edit' item.pk %}">Edit</a>
+              <a class="text-error" href="{% url 'menu:item_delete' item.pk %}">Delete</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+{% empty %}
+  <section class="card empty-state">
+    <p>{% if filtering %}No menu items match your search.{% else %}No menu items yet.{% endif %}</p>
+  </section>
+{% endfor %}
+{% endblock %}
