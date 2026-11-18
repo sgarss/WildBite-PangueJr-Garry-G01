@@ -14,7 +14,7 @@
     <tbody>
       {% for order in orders %}
         <tr>
-          <td>{{ order.order_number }}</td>
+          <td><a href="{% url 'orders:detail' order.pk %}">{{ order.order_number }}</a></td>
           {% if show_student %}<td>{{ order.user.full_name }}</td>{% endif %}
           <td>{{ order.order_date|date:"M j, Y g:i A" }}</td>
           <td>&#8369;{{ order.total_amount|floatformat:"2g" }}</td>

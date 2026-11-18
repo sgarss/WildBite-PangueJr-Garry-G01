@@ -1,8 +1,14 @@
-from django.shortcuts import render
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import role_required
 from accounts.models import User
+from menu.models import MenuItem
 
+from . import services
+from .forms import OrderItemsForm
 from .models import Order, OrderStatus
 
 student_only = role_required(User.Role.STUDENT)
@@ -18,11 +24,45 @@ def visible_orders(user):
 
 
 @student_only
+def place_order(request):
+    menu_items = MenuItem.objects.filter(is_available=True).select_related("category")
+    if request.method == "POST":
+        form = OrderItemsForm(request.POST, menu_items=menu_items)
+        if form.is_valid():
+            try:
+                order = services.place_order(request.user, form.quantities)
+            except ValidationError as error:
+                form.add_error(None, error)
+            else:
+                messages.success(
+                    request,
+                    f"Order {order} placed. Pay ₱{order.total_amount:,.2f} in cash when you pick it up.",
+                )
+                return redirect("orders:detail", pk=order.pk)
+        messages.error(request, "Please fix the errors below.")
+    else:
+        form = OrderItemsForm(menu_items=menu_items)
+
+    return render(request, "orders/order_form.html", {"form": form, "title": "Place an order"})
+
+
+@student_only
 def my_orders(request):
     orders = visible_orders(request.user)
     return render(request, "orders/my_orders.html", {
         "current": [order for order in orders if order.status != OrderStatus.COMPLETED],
         "history": [order for order in orders if order.status == OrderStatus.COMPLETED],
+    })
+
+
+# Another student's order gives a 404
+@login_required
+def order_detail(request, pk):
+    order = get_object_or_404(visible_orders(request.user), pk=pk)
+    return render(request, "orders/order_detail.html", {
+        "order": order,
+        "items": order.items.select_related("menu_item"),
+        "history": order.status_history.select_related("changed_by"),
     })
 
 

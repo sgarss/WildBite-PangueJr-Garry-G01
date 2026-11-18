@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>{{ title }}</h1>
+    <p class="muted">Enter how many of each item you want. You pay in cash when you pick up your order.</p>
+  </div>
+</section>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+
+  {% regroup form.rows by item.category as groups %}
+  {% for group in groups %}
+    <section class="card menu-group">
+      <h2>{{ group.grouper }}</h2>
+      {% for row in group.list %}
+        <div class="menu-item{% if not row.item.is_available %} is-unavailable{% endif %}">
+          <div>
+            <h3>
+              <label for="{{ row.field.id_for_label }}">{{ row.item.name }}</label>
+              {% if not row.item.is_available %}<span class="badge badge-muted">Unavailable</span>{% endif %}
+            </h3>
+            {% if row.item.description %}<p class="muted">{{ row.item.description }}</p>{% endif %}
+            {{ row.field.errors }}
+          </div>
+          <div class="menu-item-side">
+            <span class="price">&#8369;{{ row.item.price|floatformat:"2g" }}</span>
+            {{ row.field }}
+          </div>
+        </div>
+      {% endfor %}
+    </section>
+  {% empty %}
+    <section class="card empty-state">
+      <p>No items are available right now. Please check again later.</p>
+    </section>
+  {% endfor %}
+
+  {% if groups %}
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{% if order %}Save changes{% else %}Place order{% endif %}</button>
+      <a class="btn btn-outline" href="{% if order %}{% url 'orders:detail' order.pk %}{% else %}{% url 'menu:list' %}{% endif %}">Cancel</a>
+    </div>
+  {% endif %}
+</form>
+{% endblock %}

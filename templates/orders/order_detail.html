@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Order {{ order.order_number }}</h1>
+    <p class="muted">
+      Placed {{ order.order_date|date:"M j, Y g:i A" }}
+      {% if user.is_canteen_staff %}by {{ order.user.full_name }} ({{ order.user.email }}){% endif %}
+    </p>
+  </div>
+  <span class="badge status-{{ order.status|lower }}">{{ order.get_status_display }}</span>
+</section>
+
+<div class="detail-grid">
+  <section class="card table-card">
+    <table class="table">
+      <thead>
+        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
+      </thead>
+      <tbody>
+        {% for line in items %}
+          <tr>
+            <td>{{ line.menu_item.name }}</td>
+            <td>{{ line.quantity }}</td>
+            <td>&#8369;{{ line.unit_price|floatformat:"2g" }}</td>
+            <td>&#8369;{{ line.line_total|floatformat:"2g" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr><th colspan="3">Total</th><th>&#8369;{{ order.total_amount|floatformat:"2g" }}</th></tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <div class="detail-side">
+    <section class="card">
+      <h2>Status</h2>
+      <ol class="timeline">
+        {% for change in history %}
+          <li>
+            <strong>{{ change.get_status_display }}</strong>
+            <span class="muted">
+              {{ change.changed_at|date:"M j, g:i A" }}
+              {% if user.is_canteen_staff %}by {{ change.changed_by.full_name }}{% endif %}
+            </span>
+          </li>
+        {% endfor %}
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Payment</h2>
+      <p>
+        Cash on pickup: <strong>{{ order.payment.get_payment_status_display }}</strong><br>
+        Amount: &#8369;{{ order.payment.amount|floatformat:"2g" }}
+      </p>
+      {% if order.payment.is_paid %}
+        <p class="muted">
+          Paid {{ order.payment.paid_at|date:"M j, g:i A" }}
+          {% if user.is_canteen_staff %}to {{ order.payment.received_by.full_name }}{% endif %}
+        </p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<p>
+  {% if user.is_canteen_staff %}
+    <a href="{% url 'orders:staff_orders' %}">&larr; Back to incoming orders</a>
+  {% else %}
+    <a href="{% url 'orders:my_orders' %}">&larr; Back to my orders</a>
+  {% endif %}
+</p>
+{% endblock %}
