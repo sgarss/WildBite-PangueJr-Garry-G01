@@ -52,9 +52,9 @@ def item_form(request, pk=None):
         if form.is_valid():
             saved = form.save()
             if item:
-                messages.success(request, f'"{saved}" was updated.')
+                messages.success(request, f"{saved} was updated.")
             else:
-                messages.success(request, f'"{saved}" was added to the menu.')
+                messages.success(request, f"{saved} was added to the menu.")
             return redirect("menu:list")
         messages.error(request, "Please fix the errors below.")
     else:
@@ -76,10 +76,10 @@ def item_delete(request, pk):
         except (ProtectedError, RestrictedError):
             messages.error(
                 request,
-                f'"{item}" is part of existing orders, so it can\'t be deleted. Mark it unavailable instead.',
+                f"{item} is part of existing orders, so it can't be deleted. Mark it unavailable instead.",
             )
         else:
-            messages.success(request, f'"{item}" was deleted.')
+            messages.success(request, f"{item} was deleted.")
         return redirect("menu:list")
 
     return render(request, "menu/confirm_delete.html", {
@@ -97,7 +97,7 @@ def item_toggle(request, pk):
     item.is_available = not item.is_available
     item.save(update_fields=["is_available"])
     state = "available" if item.is_available else "unavailable"
-    messages.success(request, f'"{item}" is now {state}.')
+    messages.success(request, f"{item} is now {state}.")
     return redirect("menu:list")
 
 
@@ -135,9 +135,9 @@ def category_delete(request, pk):
         try:
             category.delete()
         except (ProtectedError, RestrictedError):
-            messages.error(request, f'"{category}" still has menu items, so it can\'t be deleted.')
+            messages.error(request, f"{category} still has menu items, so it can't be deleted.")
         else:
-            messages.success(request, f'"{category}" was deleted.')
+            messages.success(request, f"{category} was deleted.")
         return redirect("menu:category_list")
 
     return render(request, "menu/confirm_delete.html", {
