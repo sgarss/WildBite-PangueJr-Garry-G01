@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Categories</h1>
+    <p class="muted">Group menu items so students can find them easily.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'menu:category_add' %}">Add category</a>
+</section>
+
+{% if categories %}
+  <div class="card table-card">
+    <table class="table">
+      <thead>
+        <tr><th>Name</th><th>Description</th><th>Items</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for category in categories %}
+          <tr>
+            <td>{{ category.name }}</td>
+            <td class="muted">{{ category.description|default:"-" }}</td>
+            <td>{{ category.item_count }}</td>
+            <td class="table-actions">
+              <a href="{% url 'menu:category_edit' category.pk %}">Edit</a>
+              <a class="text-error" href="{% url 'menu:category_delete' category.pk %}">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <section class="card empty-state">
+    <p>No categories yet. Add one to start building the menu.</p>
+  </section>
+{% endif %}
+{% endblock %}
