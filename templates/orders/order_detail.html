@@ -68,10 +68,19 @@
     {% if user.is_canteen_staff and order.next_status %}
       <section class="card">
         <h2>Update order</h2>
-        <form method="post" action="{% url 'orders:advance_status' order.pk %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-primary btn-block">Mark as {{ order.next_status.label }}</button>
-        </form>
+        {% if order.status == 'READY' and not order.payment.is_paid %}
+          {# Cash first, then the order can be completed #}
+          <p class="muted">Collect &#8369;{{ order.payment.amount|floatformat:"2g" }} from the student, then record it.</p>
+          <form method="post" action="{% url 'orders:record_payment' order.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-block">Record cash payment</button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'orders:advance_status' order.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-block">Mark as {{ order.next_status.label }}</button>
+          </form>
+        {% endif %}
       </section>
     {% endif %}
 

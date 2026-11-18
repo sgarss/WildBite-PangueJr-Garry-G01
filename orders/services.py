@@ -118,6 +118,24 @@ def advance_status(order, staff):
     return order
 
 
+# Cash is paid when the student picks up a ready order
+@transaction.atomic
+def record_payment(order, staff):
+    order = Order.objects.select_for_update().get(pk=order.pk)
+    payment = order.payment
+    if payment.is_paid:
+        raise ValidationError("This order is already paid.")
+    if order.status != OrderStatus.READY:
+        raise ValidationError("Cash can be recorded once the order is ready for pickup.")
+
+    payment.payment_status = Payment.Status.PAID
+    payment.amount = order.total_amount
+    payment.paid_at = timezone.now()
+    payment.received_by = staff
+    payment.save()
+    return payment
+
+
 # Cancelling deletes the order with its items, history and payment
 @transaction.atomic
 def cancel_order(order):

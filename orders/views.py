@@ -149,3 +149,16 @@ def advance_status(request, pk):
     else:
         messages.success(request, f"Order {order} is now {order.get_status_display()}.")
     return redirect("orders:detail", pk=pk)
+
+
+@staff_only
+@require_POST
+def record_payment(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    try:
+        payment = services.record_payment(order, request.user)
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+    else:
+        messages.success(request, f"Cash payment of ₱{payment.amount:,.2f} recorded for order {order}.")
+    return redirect("orders:detail", pk=pk)
