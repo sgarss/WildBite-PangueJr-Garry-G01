@@ -9,4 +9,6 @@ urlpatterns = [
     path("new/", views.place_order, name="place"),
     path("staff/", views.staff_orders, name="staff_orders"),
     path("<int:pk>/", views.order_detail, name="detail"),
+    path("<int:pk>/edit/", views.edit_order, name="edit"),
+    path("<int:pk>/cancel/", views.cancel_order, name="cancel"),
 ]

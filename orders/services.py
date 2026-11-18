@@ -61,3 +61,48 @@ def place_order(student, quantities):
     OrderStatusHistory.objects.create(order=order, changed_by=student, status=OrderStatus.PENDING)
     Payment.objects.create(order=order, amount=total)
     return order
+
+
+def locked_pending_order(order, action):
+    order = Order.objects.select_for_update().get(pk=order.pk)
+    if not order.is_pending:
+        raise ValidationError(f"Only pending orders can be {action}.")
+    return order
+
+
+@transaction.atomic
+def update_order(order, quantities):
+    order = locked_pending_order(order, "changed")
+    if not quantities:
+        raise ValidationError("Choose at least one menu item. To remove everything, cancel the order.")
+
+    lines = {line.menu_item_id: line for line in order.items.all()}
+    items = locked_menu_items(quantities)
+    # Unavailable items can stay in the order but can't be added or increased
+    blocked = [
+        item.name for pk, item in items.items()
+        if not item.is_available and quantities[pk] > (lines[pk].quantity if pk in lines else 0)
+    ]
+    if blocked:
+        raise ValidationError(f"No longer available: {', '.join(blocked)}.")
+
+    for pk, line in lines.items():
+        if pk not in quantities:
+            line.delete()
+    for pk, qty in quantities.items():
+        if pk in lines:
+            lines[pk].quantity = qty
+            lines[pk].save(update_fields=["quantity"])
+        else:
+            OrderItem.objects.create(order=order, menu_item=items[pk], quantity=qty, unit_price=items[pk].price)
+
+    order.total_amount = sum((line.line_total for line in order.items.all()), Decimal("0.00"))
+    order.save(update_fields=["total_amount"])
+    Payment.objects.filter(order=order).update(amount=order.total_amount)
+    return order
+
+
+# Cancelling deletes the order with its items, history and payment
+@transaction.atomic
+def cancel_order(order):
+    locked_pending_order(order, "cancelled").delete()
