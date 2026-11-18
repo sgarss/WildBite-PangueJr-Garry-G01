@@ -8,17 +8,35 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import role_required
 from accounts.models import User
 
-from .forms import CategoryForm, MenuItemForm
+from .forms import CategoryForm, MenuFilterForm, MenuItemForm
 from .models import Category, MenuItem
 
 staff_only = role_required(User.Role.STAFF)
 
 
-# Menu grouped by category (students and staff)
+# Menu grouped by category, with search and filters (students and staff)
 @login_required
 def menu_list(request):
+    form = MenuFilterForm(request.GET)
     items = MenuItem.objects.select_related("category")
-    return render(request, "menu/menu_list.html", {"items": items})
+
+    if form.is_valid():
+        query = form.cleaned_data["q"]
+        category = form.cleaned_data["category"]
+        availability = form.cleaned_data["availability"]
+        if query:
+            items = items.filter(name__icontains=query)
+        if category:
+            items = items.filter(category=category)
+        if availability:
+            items = items.filter(is_available=(availability == "available"))
+
+    filtering = any(request.GET.get(key) for key in ("q", "category", "availability"))
+    return render(request, "menu/menu_list.html", {
+        "form": form,
+        "items": items,
+        "filtering": filtering,
+    })
 
 
 # Add (no pk) or edit a menu item

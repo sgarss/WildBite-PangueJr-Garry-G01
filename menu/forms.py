@@ -22,6 +22,26 @@ class CategoryForm(forms.ModelForm):
         return check_unique_name(self, Category, "category")
 
 
+class MenuFilterForm(forms.Form):
+    AVAILABILITY_CHOICES = [
+        ("", "All items"),
+        ("available", "Available"),
+        ("unavailable", "Unavailable"),
+    ]
+
+    q = forms.CharField(
+        required=False,
+        label="Search",
+        widget=forms.SearchInput(attrs={"placeholder": "Search by name"}),
+    )
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        empty_label="All categories",
+    )
+    availability = forms.ChoiceField(choices=AVAILABILITY_CHOICES, required=False)
+
+
 class MenuItemForm(forms.ModelForm):
     class Meta:
         model = MenuItem

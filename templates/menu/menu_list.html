@@ -16,6 +16,26 @@
   {% endif %}
 </section>
 
+{# Search and filters #}
+<form method="get" class="card filter-bar">
+  <div class="form-group">
+    <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
+    {{ form.q }}
+  </div>
+  <div class="form-group">
+    <label for="{{ form.category.id_for_label }}">Category</label>
+    {{ form.category }}
+  </div>
+  <div class="form-group">
+    <label for="{{ form.availability.id_for_label }}">Availability</label>
+    {{ form.availability }}
+  </div>
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if filtering %}<a class="btn btn-outline" href="{% url 'menu:list' %}">Clear</a>{% endif %}
+  </div>
+</form>
+
 {% regroup items by category as groups %}
 {% for group in groups %}
   <section class="card menu-group">
@@ -50,7 +70,7 @@
   </section>
 {% empty %}
   <section class="card empty-state">
-    <p>No menu items yet.</p>
+    <p>{% if filtering %}No menu items match your search.{% else %}No menu items yet.{% endif %}</p>
   </section>
 {% endfor %}
 {% endblock %}

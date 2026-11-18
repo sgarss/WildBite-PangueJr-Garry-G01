@@ -342,6 +342,22 @@ a { color: var(--maroon); }
 .btn-danger:hover { background: #a93226; border-color: #a93226; }
 .form-actions-center { justify-content: center; }
 
+/* Search and filter bar */
+.filter-bar {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.filter-bar .form-group { margin: 0; }
+.filter-actions { display: flex; gap: 8px; }
+
+@media (max-width: 760px) {
+  .filter-bar { grid-template-columns: 1fr; }
+}
+
 /* Menu */
 .menu-group { margin-bottom: 16px; }
 .menu-group h2 { font-size: 1.15rem; margin: 0 0 4px; color: var(--maroon); }
