@@ -8,10 +8,20 @@ from django.contrib.auth.forms import (
     UserCreationForm,
     UsernameField,
 )
+from django.db import transaction
+from django.utils import timezone
 
-from .models import User
+from .models import ProfilePhoto, User
 
 MAX_PHOTO_SIZE = 2 * 1024 * 1024
+
+# Allowed image formats (as detected by Pillow) and their content types
+PHOTO_TYPES = {
+    "JPEG": ProfilePhoto.ContentType.JPEG,
+    "PNG": ProfilePhoto.ContentType.PNG,
+    "GIF": ProfilePhoto.ContentType.GIF,
+    "WEBP": ProfilePhoto.ContentType.WEBP,
+}
 
 
 # Trim a name and reject blanks
@@ -73,35 +83,34 @@ class EmailLoginForm(AuthenticationForm):
 
 
 class ProfileForm(forms.ModelForm):
+    # Pillow checks that the upload is a real image
+    profile_photo = forms.ImageField(
+        required=False,
+        label="Profile photo",
+        help_text="JPG, PNG, GIF or WEBP, up to 2 MB. Leave empty to keep your current photo.",
+        widget=forms.FileInput(attrs={"accept": "image/jpeg,image/png,image/gif,image/webp"}),
+    )
     remove_photo = forms.BooleanField(required=False, label="Remove current photo")
 
     class Meta:
         model = User
         # Only these fields are editable (never role or permissions)
-        fields = ("first_name", "last_name", "email", "contact_number", "profile_photo")
+        fields = ("first_name", "last_name", "email", "contact_number")
         labels = {
             "first_name": "First name",
             "last_name": "Last name",
             "email": "Email",
             "contact_number": "Contact number",
-            "profile_photo": "Profile photo",
         }
         help_texts = {
             "contact_number": "Optional. Example: 09171234567",
-            "profile_photo": "JPG, PNG, GIF or WEBP, up to 2 MB. Leave empty to keep your current photo.",
         }
         widgets = {
             "first_name": forms.TextInput(attrs={"autocomplete": "given-name"}),
             "last_name": forms.TextInput(attrs={"autocomplete": "family-name"}),
             "email": forms.EmailInput(attrs={"autocomplete": "email"}),
             "contact_number": forms.TextInput(attrs={"autocomplete": "tel", "inputmode": "tel", "placeholder": "09171234567"}),
-            "profile_photo": forms.FileInput(attrs={"accept": "image/*"}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Remember the current photo so it can be deleted after a change
-        self.old_photo = self.instance.profile_photo.name or ""
 
     def clean_first_name(self):
         return clean_name(self.cleaned_data.get("first_name"), "first name")
@@ -124,26 +133,46 @@ class ProfileForm(forms.ModelForm):
             raise forms.ValidationError("Enter a valid contact number, e.g. 09171234567.")
         return number
 
-    # Size limit for new uploads
+    # Size and format checks (format comes from the image itself, not the file name)
     def clean_profile_photo(self):
         photo = self.cleaned_data.get("profile_photo")
-        upload = self.files.get(self.add_prefix("profile_photo"))
-        if upload and upload.size > MAX_PHOTO_SIZE:
+        if not photo:
+            return None
+        if photo.size > MAX_PHOTO_SIZE:
             raise forms.ValidationError("Photo must be 2 MB or smaller.")
+        if photo.image.format not in PHOTO_TYPES:
+            raise forms.ValidationError("Only JPG, PNG, GIF or WEBP photos are allowed.")
         return photo
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        new_upload = self.files.get(self.add_prefix("profile_photo"))
-        # Remove photo only when no new one was uploaded
-        if self.cleaned_data.get("remove_photo") and not new_upload:
-            user.profile_photo = ""
         if commit:
-            user.save()
-            # Delete the old file once it's replaced or removed
-            if self.old_photo and user.profile_photo.name != self.old_photo:
-                user.profile_photo.storage.delete(self.old_photo)
+            # User details and photo are saved together or not at all
+            with transaction.atomic():
+                user.save()
+                self.save_photo(user)
         return user
+
+    def save_photo(self, user):
+        photo = self.cleaned_data.get("profile_photo")
+        if photo:
+            photo.seek(0)
+            now = timezone.now()
+            ProfilePhoto.objects.update_or_create(
+                user=user,
+                defaults={
+                    "image": photo.read(),
+                    "content_type": PHOTO_TYPES[photo.image.format],
+                    "uploaded_at": now,
+                },
+            )
+            user.photo_uploaded_at = now
+        elif self.cleaned_data.get("remove_photo"):
+            ProfilePhoto.objects.filter(user=user).delete()
+            user.photo_uploaded_at = None
+        else:
+            return
+        user.save(update_fields=["photo_uploaded_at"])
 
 
 # Django admin forms for the custom user
