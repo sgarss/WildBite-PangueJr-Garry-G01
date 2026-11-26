@@ -109,8 +109,14 @@ class PlaceOrderTests(OrderSetup, TestCase):
         self.client.force_login(self.student)
         self.url = reverse("orders:place")
 
+    # Open the order page and send its form, like a browser would
+    def submit(self, data, token=None, follow=False):
+        if token is None:
+            token = self.client.get(self.url).context["order_token"]
+        return self.client.post(self.url, {**data, "order_token": token}, follow=follow)
+
     def test_place_order(self):
-        response = self.client.post(self.url, {f"qty_{self.adobo.pk}": 2, f"qty_{self.tea.pk}": 1}, follow=True)
+        response = self.submit({f"qty_{self.adobo.pk}": 2, f"qty_{self.tea.pk}": 1}, follow=True)
         order = Order.objects.get()
         self.assertRedirects(response, self.detail_url(order))
         self.assertContains(response, f"Order {order.order_number} placed.")
@@ -145,14 +151,14 @@ class PlaceOrderTests(OrderSetup, TestCase):
         self.assertEqual(order.total_amount, Decimal("130.00"))
 
     def test_empty_order_rejected(self):
-        response = self.client.post(self.url, {f"qty_{self.adobo.pk}": 0})
+        response = self.submit({f"qty_{self.adobo.pk}": 0})
         self.assertContains(response, "Choose at least one menu item.")
         self.assertFalse(Order.objects.exists())
 
     def test_invalid_quantities_rejected(self):
         for quantity in ["-1", "21", "abc"]:
             with self.subTest(quantity=quantity):
-                response = self.client.post(self.url, {f"qty_{self.adobo.pk}": quantity})
+                response = self.submit({f"qty_{self.adobo.pk}": quantity})
                 self.assertContains(response, "Please fix the errors below.")
         self.assertFalse(Order.objects.exists())
 
@@ -166,12 +172,38 @@ class PlaceOrderTests(OrderSetup, TestCase):
         self.assertFalse(Order.objects.exists())
 
     def test_item_that_becomes_unavailable_is_rejected(self):
-        page_quantities = {f"qty_{self.adobo.pk}": 1}
+        token = self.client.get(self.url).context["order_token"]
         self.adobo.is_available = False
         self.adobo.save()
-        response = self.client.post(self.url, page_quantities)
+        response = self.submit({f"qty_{self.adobo.pk}": 1}, token=token)
         self.assertContains(response, "Choose at least one menu item.")
         self.assertFalse(Order.objects.exists())
+
+    def test_same_form_cannot_be_sent_twice(self):
+        token = self.client.get(self.url).context["order_token"]
+        data = {f"qty_{self.adobo.pk}": 1}
+        self.submit(data, token=token)
+        response = self.submit(data, token=token, follow=True)
+        self.assertRedirects(response, reverse("orders:my_orders"))
+        self.assertContains(response, "This order was already submitted.")
+        self.assertEqual(Order.objects.count(), 1)
+
+    def test_order_without_token_is_rejected(self):
+        response = self.client.post(self.url, {f"qty_{self.adobo.pk}": 1}, follow=True)
+        self.assertContains(response, "This order was already submitted.")
+        self.assertFalse(Order.objects.exists())
+
+    def test_form_with_errors_gets_a_new_token(self):
+        response = self.submit({f"qty_{self.adobo.pk}": 0})
+        self.submit({f"qty_{self.adobo.pk}": 1}, token=response.context["order_token"])
+        self.assertEqual(Order.objects.count(), 1)
+
+    def test_two_open_tabs_both_work(self):
+        first = self.client.get(self.url).context["order_token"]
+        second = self.client.get(self.url).context["order_token"]
+        self.submit({f"qty_{self.adobo.pk}": 1}, token=first)
+        self.submit({f"qty_{self.tea.pk}": 1}, token=second)
+        self.assertEqual(Order.objects.count(), 2)
 
     def test_staff_cannot_place_orders(self):
         self.client.force_login(self.staff)
@@ -308,8 +340,10 @@ class StaffOrderTests(OrderSetup, TestCase):
         self.order = self.place()
         self.client.force_login(self.staff)
 
-    def advance(self):
-        return self.client.post(reverse("orders:advance_status", args=[self.order.pk]), follow=True)
+    def advance(self, current_status=None):
+        self.order.refresh_from_db()
+        data = {"current_status": current_status or self.order.status}
+        return self.client.post(reverse("orders:advance_status", args=[self.order.pk]), data, follow=True)
 
     def pay(self):
         return self.client.post(reverse("orders:record_payment", args=[self.order.pk]), follow=True)
@@ -349,6 +383,25 @@ class StaffOrderTests(OrderSetup, TestCase):
             ("PREPARING", self.staff.pk),
             ("READY", self.staff.pk),
         ])
+
+    def test_double_click_moves_status_only_once(self):
+        self.advance(current_status="PENDING")
+        response = self.advance(current_status="PENDING")
+        self.assertContains(response, "This order was already moved to Preparing. Nothing was changed.")
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, OrderStatus.PREPARING)
+        self.assertEqual(self.order.status_history.count(), 2)
+
+    def test_status_button_sends_current_status(self):
+        response = self.client.get(self.detail_url(self.order))
+        self.assertContains(response, 'name="current_status" value="PENDING"')
+
+    def test_invalid_filter_shows_error(self):
+        response = self.client.get(reverse("orders:staff_orders"), {"date": "not-a-date"})
+        self.assertContains(response, "Enter a valid date.")
+        self.assertContains(response, "No orders match your search.")
+        response = self.client.get(reverse("orders:staff_orders"), {"status": "CANCELLED"})
+        self.assertContains(response, "Select a valid choice.")
 
     def test_cannot_complete_before_payment(self):
         self.set_status(self.order, OrderStatus.READY)

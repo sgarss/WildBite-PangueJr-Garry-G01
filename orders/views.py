@@ -1,3 +1,4 @@
+import secrets
 from datetime import timedelta
 
 from django.contrib import messages
@@ -20,6 +21,8 @@ from .reports import sales_summary
 student_only = role_required(User.Role.STUDENT)
 staff_only = role_required(User.Role.STAFF)
 
+ORDER_TOKENS = "order_tokens"
+
 
 # Staff see every order, students only their own
 def visible_orders(user):
@@ -29,10 +32,33 @@ def visible_orders(user):
     return orders.filter(user=user)
 
 
+# One-time code for the order form, so the same form can't be sent twice
+def new_order_token(request):
+    token = secrets.token_urlsafe(16)
+    # Keep the last few so two open tabs still work
+    request.session[ORDER_TOKENS] = request.session.get(ORDER_TOKENS, [])[-4:] + [token]
+    return token
+
+
+def use_order_token(request):
+    tokens = request.session.get(ORDER_TOKENS, [])
+    token = request.POST.get("order_token")
+    if token not in tokens:
+        return False
+    tokens.remove(token)
+    request.session[ORDER_TOKENS] = tokens
+    # Save right away so a second click finds the token already used
+    request.session.save()
+    return True
+
+
 @student_only
 def place_order(request):
     menu_items = MenuItem.objects.filter(is_available=True).select_related("category")
     if request.method == "POST":
+        if not use_order_token(request):
+            messages.error(request, "This order was already submitted. Check your orders below.")
+            return redirect("orders:my_orders")
         form = OrderItemsForm(request.POST, menu_items=menu_items)
         if form.is_valid():
             try:
@@ -49,7 +75,11 @@ def place_order(request):
     else:
         form = OrderItemsForm(menu_items=menu_items)
 
-    return render(request, "orders/order_form.html", {"form": form, "title": "Place an order"})
+    return render(request, "orders/order_form.html", {
+        "form": form,
+        "title": "Place an order",
+        "order_token": new_order_token(request),
+    })
 
 
 @student_only
@@ -159,7 +189,8 @@ def staff_orders(request):
 def advance_status(request, pk):
     order = get_object_or_404(Order, pk=pk)
     try:
-        order = services.advance_status(order, request.user)
+        # The button sends the status it was showing, so a double click can't skip a step
+        order = services.advance_status(order, request.user, request.POST.get("current_status", ""))
     except ValidationError as error:
         messages.error(request, error.messages[0])
     else:

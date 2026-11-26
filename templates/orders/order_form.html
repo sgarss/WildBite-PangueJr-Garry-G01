@@ -10,8 +10,9 @@
   </div>
 </section>
 
-<form method="post" novalidate>
+<form method="post" novalidate data-submit-once>
   {% csrf_token %}
+  {% if order_token %}<input type="hidden" name="order_token" value="{{ order_token }}">{% endif %}
   {{ form.non_field_errors }}
 
   {% regroup form.rows by item.category as groups %}

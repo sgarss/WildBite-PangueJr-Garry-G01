@@ -104,8 +104,10 @@ def update_order(order, quantities):
 
 # Move the order one step forward and record who did it
 @transaction.atomic
-def advance_status(order, staff):
+def advance_status(order, staff, current_status=None):
     order = Order.objects.select_for_update().get(pk=order.pk)
+    if current_status is not None and order.status != current_status:
+        raise ValidationError(f"This order was already moved to {order.get_status_display()}. Nothing was changed.")
     new_status = order.next_status
     if new_status is None:
         raise ValidationError("This order is already completed.")
