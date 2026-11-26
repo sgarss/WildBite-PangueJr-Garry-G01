@@ -1,8 +1,11 @@
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
@@ -10,8 +13,9 @@ from accounts.models import User
 from menu.models import MenuItem
 
 from . import services
-from .forms import OrderFilterForm, OrderItemsForm
+from .forms import OrderFilterForm, OrderItemsForm, SalesReportForm
 from .models import Order, OrderStatus
+from .reports import sales_summary
 
 student_only = role_required(User.Role.STUDENT)
 staff_only = role_required(User.Role.STAFF)
@@ -162,3 +166,19 @@ def record_payment(request, pk):
     else:
         messages.success(request, f"Cash payment of ₱{payment.amount:,.2f} recorded for order {order}.")
     return redirect("orders:detail", pk=pk)
+
+
+# Orders and sales per day for a date range (last 7 days by default)
+@staff_only
+def sales_report(request):
+    if "start" in request.GET or "end" in request.GET:
+        data = request.GET
+    else:
+        today = timezone.localdate()
+        data = {"start": today - timedelta(days=6), "end": today}
+    form = SalesReportForm(data)
+
+    report = None
+    if form.is_valid():
+        report = sales_summary(form.cleaned_data["start"], form.cleaned_data["end"])
+    return render(request, "orders/sales_report.html", {"form": form, "report": report})
