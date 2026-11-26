@@ -87,7 +87,8 @@ Open `.env` and fill in each value:
 | Key | What to put |
 |---|---|
 | `SECRET_KEY` | A long random string (see below) |
-| `DEBUG` | `True` for local development |
+| `DEBUG` | `True` for local development, `False` to see the custom error pages |
+| `ALLOWED_HOSTS` | Host names the site answers to, usually `127.0.0.1,localhost` |
 | `DB_NAME` | Database name, usually `postgres` |
 | `DB_USER` | Supabase database user |
 | `DB_PASSWORD` | Supabase database password |
@@ -125,6 +126,16 @@ python manage.py createsuperuser
 ```
 
 Log in at http://127.0.0.1:8000/admin/ to manage users and create canteen staff accounts.
+
+### Optional: check the error pages
+
+With `DEBUG=True` Django shows its detailed debug pages. To see WildBite's own error pages, set `DEBUG=False` in `.env` and start the server with:
+
+```
+python manage.py runserver --insecure
+```
+
+`--insecure` lets the development server keep serving the CSS while `DEBUG` is off. Then open a page that doesn't exist, such as http://127.0.0.1:8000/nope/, to see the custom 404 page. Set `DEBUG=True` again when you're done.
 
 ## Core Feature: Food Ordering
 
@@ -169,7 +180,7 @@ With the virtual environment active and `.env` filled in, run:
 python manage.py test
 ```
 
-This runs every test in `accounts`, `menu` and `orders`. To run one app only, add its name, for example `python manage.py test orders`.
+This runs every test in `accounts`, `menu`, `orders` and `wildbite` (error pages). To run one app only, add its name, for example `python manage.py test orders`.
 
 The tests use a separate Supabase test database (`test_` + your `DB_NAME`), never your real data and never SQLite. The first run creates it. After that it is reused, because the Supabase connection pooler doesn't allow dropping it (see `wildbite/test_runner.py`). A full run takes a few minutes because every query goes to Supabase.
 
