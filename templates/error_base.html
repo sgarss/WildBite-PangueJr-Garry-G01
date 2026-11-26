@@ -1,0 +1,25 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} | WildBite</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  {# Simple layout for error pages that are shown without the logged-in user #}
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a class="brand" href="/">Wild<span>Bite</span></a>
+    </div>
+  </header>
+
+  <main class="container page">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="container">WildBite &middot; CIT-U Canteen Pre-Ordering</div>
+  </footer>
+</body>
+</html>
