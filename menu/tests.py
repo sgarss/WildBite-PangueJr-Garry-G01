@@ -261,3 +261,9 @@ class MenuSearchTests(TestCase):
     def test_no_results_message(self):
         response = self.get_menu(q="pizza")
         self.assertContains(response, "No menu items match your search.")
+
+    def test_invalid_filter_shows_error(self):
+        response = self.get_menu(category=99999)
+        self.assertContains(response, "Select a valid choice.")
+        self.assertContains(response, "No menu items match your search.")
+        self.assertNotContains(response, "Chicken Adobo")

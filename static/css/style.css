@@ -222,7 +222,8 @@ a { color: var(--maroon); }
   box-shadow: 0 0 0 3px rgba(122, 16, 32, 0.15);
 }
 
-.form-group.has-error input { border-color: var(--error-text); }
+.form-group.has-error input,
+.form-group.has-error select { border-color: var(--error-text); }
 
 .helptext,
 .form-group .help { display: block; font-size: 0.85rem; color: var(--muted); margin-top: 4px; }

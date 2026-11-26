@@ -142,6 +142,9 @@ def staff_orders(request):
             orders = orders.filter(status=status)
         if date:
             orders = orders.filter(order_date__date=date)
+    else:
+        # Bad filter values show an error instead of every order
+        orders = orders.none()
 
     filtering = any(request.GET.get(key) for key in ("q", "status", "date"))
     return render(request, "orders/staff_orders.html", {

@@ -30,6 +30,9 @@ def menu_list(request):
             items = items.filter(category=category)
         if availability:
             items = items.filter(is_available=(availability == "available"))
+    else:
+        # Bad filter values show an error instead of the whole menu
+        items = items.none()
 
     filtering = any(request.GET.get(key) for key in ("q", "category", "availability"))
     return render(request, "menu/menu_list.html", {
