@@ -5,8 +5,8 @@
 {% block content %}
 <section class="card form-card">
   <div class="profile-header">
-    {% if profile_user.profile_photo %}
-      <img class="avatar" src="{% url 'accounts:profile_photo' %}?v={{ profile_user.profile_photo.name|slugify }}" alt="Profile photo">
+    {% if profile_user.photo_uploaded_at %}
+      <img class="avatar" src="{% url 'accounts:profile_photo' %}?v={{ profile_user.photo_uploaded_at|date:'U' }}" alt="Profile photo">
     {% else %}
       <div class="avatar" aria-hidden="true">{{ profile_user.first_name|slice:":1"|upper }}{{ profile_user.last_name|slice:":1"|upper }}</div>
     {% endif %}

@@ -2,16 +2,13 @@ import uuid
 from pathlib import Path
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Now
 from django.utils import timezone
 
-PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"]
 
-
-# Random file name so photo paths can't be guessed
+# Only used by old migrations (photos are now stored in the database)
 def profile_photo_path(instance, filename):
     return f"profile_photos/{uuid.uuid4().hex}{Path(filename).suffix.lower()}"
 
@@ -73,12 +70,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     contact_number = models.CharField(max_length=20, blank=True, default="")
-    profile_photo = models.ImageField(
-        upload_to=profile_photo_path,
-        max_length=255,
-        blank=True,
-        validators=[FileExtensionValidator(PHOTO_EXTENSIONS)],
-    )
+    # Set when the user has a photo; also used to refresh the cached image
+    photo_uploaded_at = models.DateTimeField(null=True, blank=True, editable=False)
     role = models.CharField(
         max_length=10,
         choices=Role.choices,
@@ -134,3 +127,35 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_canteen_staff(self):
         return self.role == self.Role.STAFF
+
+
+# Profile photo bytes, kept apart from users so pages don't load the image
+class ProfilePhoto(models.Model):
+    class ContentType(models.TextChoices):
+        JPEG = "image/jpeg", "JPEG"
+        PNG = "image/png", "PNG"
+        GIF = "image/gif", "GIF"
+        WEBP = "image/webp", "WEBP"
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="photo",
+        db_column="user_id",
+    )
+    image = models.BinaryField()
+    content_type = models.CharField(max_length=20, choices=ContentType.choices)
+    uploaded_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = "profile_photos"
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(content_type__in=["image/jpeg", "image/png", "image/gif", "image/webp"]),
+                name="profile_photos_content_type_check",
+            ),
+        ]
+
+    def __str__(self):
+        return f"Photo of {self.user}"

@@ -7,13 +7,13 @@ from django.contrib.auth.views import (
     PasswordChangeView,
 )
 from django.core.exceptions import PermissionDenied
-from django.http import FileResponse, Http404
-from django.shortcuts import redirect, render
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 
 from .decorators import role_required
 from .forms import EmailLoginForm, ProfileForm, RegistrationForm
-from .models import User
+from .models import ProfilePhoto, User
 
 
 def register(request):
@@ -98,13 +98,8 @@ def profile_edit(request):
 # Serve only the logged-in user's own photo (no user ID in the URL)
 @login_required
 def profile_photo(request):
-    photo = request.user.profile_photo
-    if not photo:
-        raise Http404
-    try:
-        response = FileResponse(photo.open('rb'))
-    except FileNotFoundError:
-        raise Http404
+    photo = get_object_or_404(ProfilePhoto, user=request.user)
+    response = HttpResponse(bytes(photo.image), content_type=photo.content_type)
     response['Cache-Control'] = 'private'
     return response
 
