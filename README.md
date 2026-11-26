@@ -153,12 +153,14 @@ Students order food from the canteen ahead of time and pick it up when it's read
 - View all orders, search by order number and filter by status or date
 - Move an order to the next status (each change is saved with the staff member and time)
 - Record the cash payment when the student picks up the order, then mark it Completed
+- See a sales report for any date range: orders and paid sales per day, and the most ordered item in each category
 
 **Rules**
 - Only available items can be ordered, and each order needs at least one item
 - Each order item keeps the price at the time of ordering, so later price changes don't affect it
 - Status only moves forward, and an order can only be Completed after it is paid
 - Students can only see and change their own orders
+- Cancelling an order asks for confirmation first, and the same order form can't be submitted twice
 - A category with items, or a menu item that is part of an order, can't be deleted (mark the item unavailable instead)
 
 The data is stored in Supabase in the `categories`, `menu_items`, `orders`, `order_items`, `order_status_history` and `payments` tables.
@@ -191,3 +193,19 @@ Ran ... tests in ...s
 
 OK
 ```
+
+### What the tests cover
+
+| Area | Examples |
+|---|---|
+| Valid input | Registering, logging in, editing the profile, adding menu items, placing an order and taking it from Pending to Completed |
+| Invalid input | Wrong quantities, empty orders, prices of zero, duplicate names, bad photos, bad report dates and filters |
+| Login required | Every page and action redirects to the login page when not logged in |
+| Blocked access | Students can't open, edit or cancel another student's order, and can't use staff pages; staff can't use student pages |
+| Invalid IDs | Missing or non-numeric IDs show the 404 page |
+| Safe changes | Actions that change data only accept POST with a CSRF token, delete and cancel ask for confirmation, and double submits are ignored |
+| Business rules | Status only moves forward, an order is paid before it is completed, and prices are saved at the time of ordering |
+| Database | Tables, constraints and ON DELETE rules match the design |
+| Error pages | Custom 404, 500 and expired form pages, with no error details shown |
+
+The security checks for the core feature are in `orders/tests_security.py`.
