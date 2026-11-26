@@ -12,7 +12,8 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
+# Comma-separated host names, e.g. 127.0.0.1,localhost
+ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if host.strip()]
 
 
 INSTALLED_APPS = [
@@ -101,7 +102,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Uploaded profile photos (not public; served by the profile_photo view)
-MEDIA_ROOT = BASE_DIR / 'media'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Tests run on the Supabase test database (see wildbite/test_runner.py)
+TEST_RUNNER = 'wildbite.test_runner.SupabaseTestRunner'

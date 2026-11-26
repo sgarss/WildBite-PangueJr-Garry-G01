@@ -19,9 +19,9 @@
 
     <div class="form-group{% if form.profile_photo.errors %} has-error{% endif %}">
       <label for="{{ form.profile_photo.id_for_label }}">{{ form.profile_photo.label }}</label>
-      {% if form.old_photo %}
+      {% if user.photo_uploaded_at %}
         <div class="photo-current">
-          <img class="avatar avatar-sm" src="{% url 'accounts:profile_photo' %}?v={{ form.old_photo|slugify }}" alt="Current profile photo">
+          <img class="avatar avatar-sm" src="{% url 'accounts:profile_photo' %}?v={{ user.photo_uploaded_at|date:'U' }}" alt="Current profile photo">
           <label class="checkbox">{{ form.remove_photo }} {{ form.remove_photo.label }}</label>
         </div>
       {% endif %}

@@ -87,7 +87,8 @@ Open `.env` and fill in each value:
 | Key | What to put |
 |---|---|
 | `SECRET_KEY` | A long random string (see below) |
-| `DEBUG` | `True` for local development |
+| `DEBUG` | `True` for local development, `False` to see the custom error pages |
+| `ALLOWED_HOSTS` | Host names the site answers to, usually `127.0.0.1,localhost` |
 | `DB_NAME` | Database name, usually `postgres` |
 | `DB_USER` | Supabase database user |
 | `DB_PASSWORD` | Supabase database password |
@@ -126,6 +127,16 @@ python manage.py createsuperuser
 
 Log in at http://127.0.0.1:8000/admin/ to manage users and create canteen staff accounts.
 
+### Optional: check the error pages
+
+With `DEBUG=True` Django shows its detailed debug pages. To see WildBite's own error pages, set `DEBUG=False` in `.env` and start the server with:
+
+```
+python manage.py runserver --insecure
+```
+
+`--insecure` lets the development server keep serving the CSS while `DEBUG` is off. Then open a page that doesn't exist, such as http://127.0.0.1:8000/nope/, to see the custom 404 page. Set `DEBUG=True` again when you're done.
+
 ## Core Feature: Food Ordering
 
 Students order food from the canteen ahead of time and pick it up when it's ready. They pay in cash on pickup.
@@ -142,12 +153,14 @@ Students order food from the canteen ahead of time and pick it up when it's read
 - View all orders, search by order number and filter by status or date
 - Move an order to the next status (each change is saved with the staff member and time)
 - Record the cash payment when the student picks up the order, then mark it Completed
+- See a sales report for any date range: orders and paid sales per day, and the most ordered item in each category
 
 **Rules**
 - Only available items can be ordered, and each order needs at least one item
 - Each order item keeps the price at the time of ordering, so later price changes don't affect it
 - Status only moves forward, and an order can only be Completed after it is paid
 - Students can only see and change their own orders
+- Cancelling an order asks for confirmation first, and the same order form can't be submitted twice
 - A category with items, or a menu item that is part of an order, can't be deleted (mark the item unavailable instead)
 
 The data is stored in Supabase in the `categories`, `menu_items`, `orders`, `order_items`, `order_status_history` and `payments` tables.
@@ -161,10 +174,38 @@ The data is stored in Supabase in the `categories`, `menu_items`, `orders`, `ord
 5. Log in as staff again, open **Orders**, and move the order to Preparing and then Ready for pickup.
 6. Click **Record cash payment**, then **Mark as Completed**. The student sees each change under **My Orders**.
 
-### Run the tests
+## Running the Tests
+
+With the virtual environment active and `.env` filled in, run:
 
 ```
-python manage.py test accounts menu orders --keepdb
+python manage.py test
 ```
 
-The tests run on a Supabase test database. `--keepdb` keeps it between runs, because the Supabase connection pooler doesn't allow dropping it.
+This runs every test in `accounts`, `menu`, `orders` and `wildbite` (error pages). To run one app only, add its name, for example `python manage.py test orders`.
+
+The tests use a separate Supabase test database (`test_` + your `DB_NAME`), never your real data and never SQLite. The first run creates it. After that it is reused, because the Supabase connection pooler doesn't allow dropping it (see `wildbite/test_runner.py`). A full run takes a few minutes because every query goes to Supabase.
+
+A passing run ends with:
+
+```
+Ran ... tests in ...s
+
+OK
+```
+
+### What the tests cover
+
+| Area | Examples |
+|---|---|
+| Valid input | Registering, logging in, editing the profile, adding menu items, placing an order and taking it from Pending to Completed |
+| Invalid input | Wrong quantities, empty orders, prices of zero, duplicate names, bad photos, bad report dates and filters |
+| Login required | Every page and action redirects to the login page when not logged in |
+| Blocked access | Students can't open, edit or cancel another student's order, and can't use staff pages; staff can't use student pages |
+| Invalid IDs | Missing or non-numeric IDs show the 404 page |
+| Safe changes | Actions that change data only accept POST with a CSRF token, delete and cancel ask for confirmation, and double submits are ignored |
+| Business rules | Status only moves forward, an order is paid before it is completed, and prices are saved at the time of ordering |
+| Database | Tables, constraints and ON DELETE rules match the design |
+| Error pages | Custom 404, 500 and expired form pages, with no error details shown |
+
+The security checks for the core feature are in `orders/tests_security.py`.

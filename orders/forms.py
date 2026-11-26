@@ -1,8 +1,11 @@
+from datetime import timedelta
+
 from django import forms
 
 from .models import OrderStatus
 
 MAX_QUANTITY = 20
+MAX_REPORT_DAYS = 366
 
 
 # One quantity box per menu item
@@ -52,3 +55,20 @@ class OrderFilterForm(forms.Form):
         label="Order date",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
+
+
+class SalesReportForm(forms.Form):
+    start = forms.DateField(label="From", widget=forms.DateInput(attrs={"type": "date"}))
+    end = forms.DateField(label="To", widget=forms.DateInput(attrs={"type": "date"}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start = cleaned_data.get("start")
+        end = cleaned_data.get("end")
+        if start and end:
+            if start > end:
+                raise forms.ValidationError("The start date must be on or before the end date.")
+            # Keep the report to about one year
+            if end - start >= timedelta(days=MAX_REPORT_DAYS):
+                raise forms.ValidationError(f"Choose a range of {MAX_REPORT_DAYS} days or less.")
+        return cleaned_data

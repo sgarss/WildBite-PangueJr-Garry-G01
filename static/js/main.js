@@ -9,6 +9,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Disable the button after the first click so a form isn't sent twice
+  document.querySelectorAll('form[data-submit-once]').forEach(function (form) {
+    form.addEventListener('submit', function () {
+      form.querySelectorAll('button[type="submit"]').forEach(function (button) {
+        button.disabled = true;
+        button.textContent = 'Please wait...';
+      });
+    });
+  });
+
   // Close alerts
   document.querySelectorAll('.alert-close').forEach(function (button) {
     button.addEventListener('click', function () {

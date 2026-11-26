@@ -20,17 +20,20 @@
 
 {# Search and filters #}
 <form method="get" class="card filter-bar">
-  <div class="form-group">
+  <div class="form-group{% if form.q.errors %} has-error{% endif %}">
     <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
     {{ form.q }}
+    {{ form.q.errors }}
   </div>
-  <div class="form-group">
+  <div class="form-group{% if form.category.errors %} has-error{% endif %}">
     <label for="{{ form.category.id_for_label }}">Category</label>
     {{ form.category }}
+    {{ form.category.errors }}
   </div>
-  <div class="form-group">
+  <div class="form-group{% if form.availability.errors %} has-error{% endif %}">
     <label for="{{ form.availability.id_for_label }}">Availability</label>
     {{ form.availability }}
+    {{ form.availability.errors }}
   </div>
   <div class="filter-actions">
     <button type="submit" class="btn btn-primary">Search</button>
