@@ -273,9 +273,23 @@ class StudentOrderTests(OrderSetup, TestCase):
         self.assertContains(response, "Only pending orders can be cancelled.")
         self.assertTrue(Order.objects.filter(pk=order.pk).exists())
 
-    def test_cancel_needs_post(self):
+    def test_cancel_asks_for_confirmation_first(self):
         order = self.place()
-        self.assertEqual(self.client.get(reverse("orders:cancel", args=[order.pk])).status_code, 405)
+        url = reverse("orders:cancel", args=[order.pk])
+        self.assertContains(self.client.get(self.detail_url(order)), f'href="{url}"')
+
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, "orders/confirm_cancel.html")
+        self.assertContains(response, f"Cancel order {order.order_number}?")
+        self.assertContains(response, "2 &times; Chicken Adobo")
+        self.assertTrue(Order.objects.filter(pk=order.pk).exists())
+
+    def test_confirm_page_not_shown_after_preparing_starts(self):
+        order = self.place()
+        self.set_status(order, OrderStatus.PREPARING)
+        response = self.client.get(reverse("orders:cancel", args=[order.pk]), follow=True)
+        self.assertRedirects(response, self.detail_url(order))
+        self.assertContains(response, "Only pending orders can be cancelled.")
 
     def test_student_cannot_update_status_or_payment(self):
         order = self.place()

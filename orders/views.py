@@ -104,10 +104,19 @@ def edit_order(request, pk):
     })
 
 
+# GET asks for confirmation, POST cancels
 @student_only
-@require_POST
 def cancel_order(request, pk):
     order = get_object_or_404(Order, pk=pk, user=request.user)
+    if request.method != "POST":
+        if not order.is_pending:
+            messages.error(request, "Only pending orders can be cancelled.")
+            return redirect("orders:detail", pk=order.pk)
+        return render(request, "orders/confirm_cancel.html", {
+            "order": order,
+            "items": order.items.select_related("menu_item"),
+        })
+
     try:
         services.cancel_order(order)
     except ValidationError as error:

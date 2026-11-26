@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel order {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<section class="card card-center">
+  <h1>Cancel order {{ order.order_number }}?</h1>
+  <p>This removes the order and everything in it. This can't be undone.</p>
+
+  <ul class="confirm-list">
+    {% for line in items %}
+      <li>{{ line.quantity }} &times; {{ line.menu_item.name }}</li>
+    {% endfor %}
+  </ul>
+  <p><strong>Total: &#8369;{{ order.total_amount|floatformat:"2g" }}</strong></p>
+
+  <form method="post" class="form-actions form-actions-center" data-submit-once>
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, cancel order</button>
+    <a class="btn btn-outline" href="{% url 'orders:detail' order.pk %}">Keep order</a>
+  </form>
+</section>
+{% endblock %}

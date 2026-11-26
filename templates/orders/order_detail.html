@@ -90,11 +90,7 @@
         <p class="muted">You can edit or cancel until the canteen starts preparing it.</p>
         <div class="form-actions">
           <a class="btn btn-outline" href="{% url 'orders:edit' order.pk %}">Edit order</a>
-          <form method="post" action="{% url 'orders:cancel' order.pk %}"
-                onsubmit="return confirm('Cancel order {{ order.order_number }}? This can\'t be undone.');">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Cancel order</button>
-          </form>
+          <a class="btn btn-danger" href="{% url 'orders:cancel' order.pk %}">Cancel order</a>
         </div>
       </section>
     {% endif %}
