@@ -1,19 +1,18 @@
 import io
-import shutil
-import tempfile
 from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, transaction
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 from PIL import Image
+
+from .models import ProfilePhoto
 
 User = get_user_model()
 
 PASSWORD = "Wildbite#2026x"
-TEST_MEDIA_ROOT = tempfile.mkdtemp()
 
 
 # Test helpers
@@ -299,13 +298,7 @@ class AccessControlTests(TestCase):
         self.assertTemplateUsed(response, "admin/login.html")
 
 
-@override_settings(MEDIA_ROOT=TEST_MEDIA_ROOT)
 class ProfileTests(TestCase):
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        shutil.rmtree(TEST_MEDIA_ROOT, ignore_errors=True)
-
     def setUp(self):
         self.alice = make_student(email="alice@cit.edu", first_name="Alice", last_name="Reyes")
         self.bob = make_student(email="bob@cit.edu", first_name="Bob", last_name="Santos")
@@ -319,8 +312,11 @@ class ProfileTests(TestCase):
 
     def get_photo_bytes(self):
         response = self.client.get(reverse("accounts:profile_photo"))
-        content = b"".join(response.streaming_content) if response.status_code == 200 else b""
+        content = response.content if response.status_code == 200 else b""
         return response.status_code, content
+
+    def has_photo(self, user):
+        return ProfilePhoto.objects.filter(user=user).exists()
 
     def test_profile_shows_own_details(self):
         response = self.client.get(reverse("accounts:profile"))
@@ -387,63 +383,77 @@ class ProfileTests(TestCase):
         self.assertEqual(self.alice.contact_number, "")
 
     def test_upload_photo(self):
-        response = self.edit(follow=True, profile_photo=make_image())
+        upload = make_image()
+        response = self.edit(follow=True, profile_photo=upload)
         self.assertContains(response, "Profile updated successfully.")
         self.alice.refresh_from_db()
-        self.assertTrue(self.alice.profile_photo.name.startswith("profile_photos/"))
+        self.assertIsNotNone(self.alice.photo_uploaded_at)
+
+        # Saved in the database, not in a local folder
+        photo = ProfilePhoto.objects.get(user=self.alice)
+        self.assertEqual(photo.content_type, "image/png")
+        upload.seek(0)
+        self.assertEqual(bytes(photo.image), upload.read())
+
         status, content = self.get_photo_bytes()
         self.assertEqual(status, 200)
         self.assertTrue(content.startswith(b"\x89PNG"))
 
-    def test_change_photo_deletes_old_file(self):
-        self.edit(profile_photo=make_image(color="red"))
-        self.alice.refresh_from_db()
-        old_name = self.alice.profile_photo.name
+    def test_photo_type_comes_from_image_not_file_name(self):
+        self.edit(profile_photo=make_image(name="photo.png", fmt="JPEG"))
+        self.assertEqual(ProfilePhoto.objects.get(user=self.alice).content_type, "image/jpeg")
+        response = self.client.get(reverse("accounts:profile_photo"))
+        self.assertEqual(response["Content-Type"], "image/jpeg")
+        self.assertEqual(response["Cache-Control"], "private")
 
+    def test_change_photo_replaces_old_one(self):
+        self.edit(profile_photo=make_image(color="red"))
         self.edit(profile_photo=make_image(name="new.jpg", fmt="JPEG", color="blue"))
-        self.alice.refresh_from_db()
-        storage = self.alice.profile_photo.storage
-        self.assertNotEqual(self.alice.profile_photo.name, old_name)
-        self.assertTrue(storage.exists(self.alice.profile_photo.name))
-        self.assertFalse(storage.exists(old_name))
+        photo = ProfilePhoto.objects.get(user=self.alice)
+        self.assertEqual(photo.content_type, "image/jpeg")
+        self.assertEqual(ProfilePhoto.objects.filter(user=self.alice).count(), 1)
+        self.assertTrue(self.get_photo_bytes()[1].startswith(b"\xff\xd8"))
 
     def test_empty_upload_keeps_current_photo(self):
         self.edit(profile_photo=make_image())
         self.alice.refresh_from_db()
-        name = self.alice.profile_photo.name
+        uploaded_at = self.alice.photo_uploaded_at
+        _, before = self.get_photo_bytes()
+
         self.edit(first_name="Alicia")
         self.alice.refresh_from_db()
-        self.assertEqual(self.alice.profile_photo.name, name)
+        self.assertEqual(self.alice.photo_uploaded_at, uploaded_at)
+        self.assertEqual(self.get_photo_bytes()[1], before)
 
     def test_remove_photo(self):
         self.edit(profile_photo=make_image())
-        self.alice.refresh_from_db()
-        old_name = self.alice.profile_photo.name
         self.edit(remove_photo="on")
         self.alice.refresh_from_db()
-        self.assertFalse(self.alice.profile_photo)
-        self.assertFalse(self.alice.profile_photo.storage.exists(old_name))
+        self.assertIsNone(self.alice.photo_uploaded_at)
+        self.assertFalse(self.has_photo(self.alice))
         self.assertEqual(self.get_photo_bytes()[0], 404)
+
+    def test_photo_deleted_with_user(self):
+        self.edit(profile_photo=make_image())
+        self.alice.delete()
+        self.assertFalse(ProfilePhoto.objects.exists())
 
     def test_non_image_upload_rejected(self):
         fake = SimpleUploadedFile("photo.png", b"this is not an image", content_type="image/png")
         response = self.edit(profile_photo=fake)
         self.assertIn("profile_photo", response.context["form"].errors)
-        self.alice.refresh_from_db()
-        self.assertFalse(self.alice.profile_photo)
+        self.assertFalse(self.has_photo(self.alice))
 
     def test_disallowed_image_type_rejected(self):
         response = self.edit(profile_photo=make_image(name="photo.bmp", fmt="BMP"))
-        self.assertIn("profile_photo", response.context["form"].errors)
-        self.alice.refresh_from_db()
-        self.assertFalse(self.alice.profile_photo)
+        self.assertContains(response, "Only JPG, PNG, GIF or WEBP photos are allowed.")
+        self.assertFalse(self.has_photo(self.alice))
 
     def test_too_large_photo_rejected(self):
         with mock.patch("accounts.forms.MAX_PHOTO_SIZE", 10):
             response = self.edit(profile_photo=make_image())
         self.assertContains(response, "Photo must be 2 MB or smaller.")
-        self.alice.refresh_from_db()
-        self.assertFalse(self.alice.profile_photo)
+        self.assertFalse(self.has_photo(self.alice))
 
     def test_cannot_open_another_profile_by_url(self):
         for url in [
@@ -495,7 +505,8 @@ class ProfileTests(TestCase):
         self.alice.refresh_from_db()
         self.assertEqual(self.bob.first_name, "Bob")
         self.assertEqual(self.bob.email, "bob@cit.edu")
-        self.assertFalse(self.bob.profile_photo)
+        self.assertFalse(self.has_photo(self.bob))
+        self.assertTrue(self.has_photo(self.alice))
         # Only the logged-in user changed
         self.assertEqual(self.alice.first_name, "Changed")
 
