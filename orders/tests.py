@@ -9,7 +9,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from accounts.tests import make_staff, make_student
+from accounts.models import User
+from accounts.tests import PASSWORD, make_staff, make_student
 from menu.models import Category, MenuItem
 
 from . import services
@@ -535,3 +536,24 @@ class SalesReportTests(OrderSetup, TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIsNone(response.context["report"])
                 self.assertContains(response, error)
+
+
+class OrderAdminTests(OrderSetup, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.order = self.place()
+        admin = User.objects.create_superuser(email="admin@cit.edu", password=PASSWORD, first_name="Ad", last_name="Min")
+        self.client.force_login(admin)
+
+    def test_orders_cannot_be_added_or_edited_in_admin(self):
+        self.assertEqual(self.client.get("/admin/orders/order/add/").status_code, 403)
+        response = self.client.get(f"/admin/orders/order/{self.order.pk}/change/")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="_save"')
+        self.assertContains(response, self.order.order_number)
+
+    def test_orders_can_still_be_deleted_in_admin(self):
+        response = self.client.post(f"/admin/orders/order/{self.order.pk}/delete/", {"post": "yes"})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Order.objects.exists())
+        self.assertFalse(Payment.objects.exists())
