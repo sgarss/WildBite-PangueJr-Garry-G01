@@ -356,8 +356,16 @@ a { color: var(--maroon); }
 .filter-bar .form-group { margin: 0; }
 .filter-actions { display: flex; gap: 8px; }
 
+/* Sales report */
+.report-filter { grid-template-columns: 1fr 1fr auto; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 8px; }
+.stat-card { display: flex; flex-direction: column; gap: 4px; border-top: 4px solid var(--maroon); }
+.stat-card strong { font-size: 1.6rem; }
+
 @media (max-width: 760px) {
-  .filter-bar { grid-template-columns: 1fr; }
+  .filter-bar,
+  .report-filter,
+  .stat-grid { grid-template-columns: 1fr; }
 }
 
 /* Menu */

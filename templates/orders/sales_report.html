@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales Report{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Sales Report</h1>
+    <p class="muted">Orders and cash sales per day. Sales only include paid orders.</p>
+  </div>
+</section>
+
+{# Date range filter #}
+<form method="get" class="card filter-bar report-filter" novalidate>
+  {% include 'includes/form_field.html' with field=form.start %}
+  {% include 'includes/form_field.html' with field=form.end %}
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-primary">Show report</button>
+    <a class="btn btn-outline" href="{% url 'orders:sales_report' %}">Last 7 days</a>
+  </div>
+</form>
+{{ form.non_field_errors }}
+
+{% if report %}
+  <p class="muted">
+    {{ form.cleaned_data.start|date:"M j, Y" }} to {{ form.cleaned_data.end|date:"M j, Y" }}
+  </p>
+
+  <section class="stat-grid">
+    <article class="card stat-card">
+      <span class="muted">Orders</span>
+      <strong>{{ report.totals.order_count }}</strong>
+    </article>
+    <article class="card stat-card">
+      <span class="muted">Completed</span>
+      <strong>{{ report.totals.completed_count }}</strong>
+    </article>
+    <article class="card stat-card">
+      <span class="muted">Total sales</span>
+      <strong>&#8369;{{ report.totals.sales|floatformat:"2g" }}</strong>
+    </article>
+  </section>
+
+  <h2 class="section-title">Sales per day</h2>
+  {% if report.daily %}
+    <div class="card table-card">
+      <table class="table">
+        <thead>
+          <tr><th>Date</th><th>Orders</th><th>Completed</th><th>Sales</th></tr>
+        </thead>
+        <tbody>
+          {% for row in report.daily %}
+            <tr>
+              <td>{{ row.day|date:"D, M j, Y" }}</td>
+              <td>{{ row.order_count }}</td>
+              <td>{{ row.completed_count }}</td>
+              <td>&#8369;{{ row.sales|floatformat:"2g" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th>Total</th>
+            <th>{{ report.totals.order_count }}</th>
+            <th>{{ report.totals.completed_count }}</th>
+            <th>&#8369;{{ report.totals.sales|floatformat:"2g" }}</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  {% else %}
+    <section class="card empty-state"><p>No orders in this date range.</p></section>
+  {% endif %}
+
+  <h2 class="section-title">Most ordered item per category</h2>
+  {% if report.top_items %}
+    <div class="card table-card">
+      <table class="table">
+        <thead>
+          <tr><th>Category</th><th>Item</th><th>Quantity ordered</th></tr>
+        </thead>
+        <tbody>
+          {% for row in report.top_items %}
+            <tr>
+              <td>{{ row.category }}</td>
+              <td>{{ row.item }}</td>
+              <td>{{ row.quantity }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <section class="card empty-state"><p>No items were ordered in this date range.</p></section>
+  {% endif %}
+{% endif %}
+{% endblock %}

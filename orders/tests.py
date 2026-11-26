@@ -1,4 +1,5 @@
 import re
+from datetime import timedelta
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -368,3 +369,102 @@ class StaffOrderTests(OrderSetup, TestCase):
         self.set_status(self.order, OrderStatus.COMPLETED)
         content = self.client.get(self.detail_url(self.order)).content.decode()
         self.assertIsNone(re.search(r"Mark as|Record cash payment", content))
+
+
+class SalesReportTests(OrderSetup, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.today = timezone.localdate()
+        # Paid and completed today
+        self.paid = self.place(quantities={self.adobo.pk: 2})
+        self.set_status(self.paid, OrderStatus.READY)
+        services.record_payment(self.paid, self.staff)
+        self.set_status(self.paid, OrderStatus.COMPLETED)
+        # Still pending and unpaid today
+        self.place(student=self.other, quantities={self.adobo.pk: 1, self.tea.pk: 3})
+        # Placed 10 days ago
+        self.old = self.place(quantities={self.tea.pk: 10})
+        Order.objects.filter(pk=self.old.pk).update(order_date=timezone.now() - timedelta(days=10))
+        self.client.force_login(self.staff)
+
+    def report(self, **params):
+        return self.client.get(reverse("orders:sales_report"), params)
+
+    def test_login_required(self):
+        self.client.logout()
+        url = reverse("orders:sales_report")
+        self.assertRedirects(self.report(), f"{reverse('accounts:login')}?next={url}", fetch_redirect_response=False)
+
+    def test_students_cannot_see_report(self):
+        self.client.force_login(self.student)
+        self.assertRedirects(self.report(), reverse("accounts:dashboard"), fetch_redirect_response=False)
+
+    def test_staff_can_open_report_from_navbar(self):
+        response = self.client.get(reverse("accounts:dashboard"), follow=True)
+        self.assertContains(response, f'href="{reverse("orders:sales_report")}"')
+
+    def test_default_is_last_seven_days(self):
+        response = self.report()
+        form = response.context["form"]
+        self.assertEqual(form.cleaned_data["start"], self.today - timedelta(days=6))
+        self.assertEqual(form.cleaned_data["end"], self.today)
+        totals = response.context["report"]["totals"]
+        self.assertEqual(totals["order_count"], 2)
+
+    def test_counts_and_sales_only_include_paid_orders(self):
+        response = self.report()
+        report = response.context["report"]
+        self.assertEqual(report["totals"], {
+            "order_count": 2,
+            "completed_count": 1,
+            "sales": Decimal("130.00"),
+        })
+        self.assertEqual(report["daily"], [{
+            "day": self.today,
+            "order_count": 2,
+            "completed_count": 1,
+            "sales": Decimal("130.00"),
+        }])
+        self.assertContains(response, "&#8369;130.00")
+
+    def test_most_ordered_item_per_category(self):
+        top = self.report().context["report"]["top_items"]
+        self.assertEqual(top, [
+            {"category": "Drinks", "item": "Iced Tea", "quantity": 3},
+            {"category": "Rice Meals", "item": "Chicken Adobo", "quantity": 3},
+        ])
+
+    def test_date_filter(self):
+        old_day = self.today - timedelta(days=10)
+        report = self.report(start=old_day, end=old_day).context["report"]
+        self.assertEqual(report["totals"]["order_count"], 1)
+        self.assertEqual(report["totals"]["sales"], Decimal("0"))
+        self.assertEqual(report["top_items"], [{"category": "Drinks", "item": "Iced Tea", "quantity": 10}])
+
+        # A wider range adds both days together
+        report = self.report(start=old_day, end=self.today).context["report"]
+        self.assertEqual(report["totals"]["order_count"], 3)
+        self.assertEqual(len(report["daily"]), 2)
+        self.assertEqual(report["top_items"][0]["quantity"], 13)
+
+    def test_empty_range(self):
+        response = self.report(start="2020-01-01", end="2020-01-31")
+        self.assertEqual(response.context["report"]["totals"]["sales"], Decimal("0"))
+        self.assertContains(response, "No orders in this date range.")
+        self.assertContains(response, "No items were ordered in this date range.")
+
+    def test_invalid_ranges_are_rejected(self):
+        checks = [
+            ({"start": self.today, "end": self.today - timedelta(days=1)},
+             "The start date must be on or before the end date."),
+            ({"start": self.today - timedelta(days=400), "end": self.today},
+             "Choose a range of 366 days or less."),
+            ({"start": "not-a-date", "end": self.today}, "Enter a valid date."),
+            ({"start": "", "end": self.today}, "This field is required."),
+        ]
+        for params, error in checks:
+            with self.subTest(params=params):
+                response = self.report(**params)
+                self.assertEqual(response.status_code, 200)
+                self.assertIsNone(response.context["report"])
+                self.assertContains(response, error)
