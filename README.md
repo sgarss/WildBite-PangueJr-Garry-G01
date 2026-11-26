@@ -161,10 +161,22 @@ The data is stored in Supabase in the `categories`, `menu_items`, `orders`, `ord
 5. Log in as staff again, open **Orders**, and move the order to Preparing and then Ready for pickup.
 6. Click **Record cash payment**, then **Mark as Completed**. The student sees each change under **My Orders**.
 
-### Run the tests
+## Running the Tests
+
+With the virtual environment active and `.env` filled in, run:
 
 ```
-python manage.py test accounts menu orders --keepdb
+python manage.py test
 ```
 
-The tests run on a Supabase test database. `--keepdb` keeps it between runs, because the Supabase connection pooler doesn't allow dropping it.
+This runs every test in `accounts`, `menu` and `orders`. To run one app only, add its name, for example `python manage.py test orders`.
+
+The tests use a separate Supabase test database (`test_` + your `DB_NAME`), never your real data and never SQLite. The first run creates it. After that it is reused, because the Supabase connection pooler doesn't allow dropping it (see `wildbite/test_runner.py`). A full run takes a few minutes because every query goes to Supabase.
+
+A passing run ends with:
+
+```
+Ran ... tests in ...s
+
+OK
+```
